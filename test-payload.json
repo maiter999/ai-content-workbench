@@ -1,0 +1,10 @@
+{
+  "model": "deepseek-chat",
+  "messages": [
+    {
+      "role": "user",
+      "content": "你好，请回复API连接成功"
+    }
+  ],
+  "max_tokens": 50
+}

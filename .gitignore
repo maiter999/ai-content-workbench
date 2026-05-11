@@ -5,10 +5,6 @@
 /.pnp
 .pnp.*
 .yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/versions
 
 # testing
 /coverage
@@ -32,6 +28,7 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
 
 # vercel
 .vercel
@@ -39,3 +36,18 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# prisma
+/dev.db
+*.db-journal
+/src/generated/prisma
+
+# logs
+logs/
+*.log
+
+# custom
+test-*.js
+**/测试*.md
+**/*指南.md
+**/*分析*.js

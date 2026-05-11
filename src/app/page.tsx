@@ -1,65 +1,148 @@
-import Image from "next/image";
+import Link from 'next/link'
+import { getCurrentUser } from '@/lib/auth'
+import { redirect } from 'next/navigation'
 
-export default function Home() {
+export default async function HomePage() {
+  const user = await getCurrentUser()
+
+  if (user) {
+    redirect('/dashboard')
+  }
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50">
+      {/* Header */}
+      <header className="px-6 py-4 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <span className="text-2xl">📝</span>
+          <span className="font-bold text-xl text-gray-900">AI 内容工坊</span>
+        </div>
+        <div className="flex items-center gap-4">
+          <Link
+            href="/login"
+            className="px-4 py-2 text-gray-600 hover:text-gray-900 font-medium transition"
+          >
+            登录
+          </Link>
+          <Link
+            href="/register"
+            className="px-6 py-2 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition"
+          >
+            免费开始
+          </Link>
+        </div>
+      </header>
+
+      {/* Hero Section */}
+      <section className="px-6 py-20 max-w-5xl mx-auto text-center">
+        <h1 className="text-5xl md:text-6xl font-bold text-gray-900 leading-tight">
+          一个主题，<br />
+          <span className="text-purple-600">五个平台</span>同时出稿
+        </h1>
+        <p className="text-xl text-gray-600 mt-6 max-w-2xl mx-auto">
+          告别繁琐的跨平台内容适配。输入一个主题，AI自动生成适配小红书、公众号、朋友圈、抖音等多个平台的内容。
+        </p>
+        <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+          <Link
+            href="/register"
+            className="px-8 py-4 bg-purple-600 text-white rounded-xl font-medium hover:bg-purple-700 transition text-lg shadow-lg shadow-purple-200"
+          >
+            立即免费开始 →
+          </Link>
+          <Link
+            href="/login"
+            className="px-8 py-4 bg-white text-gray-700 rounded-xl font-medium hover:bg-gray-50 transition text-lg border border-gray-200"
+          >
+            已有账号？登录
+          </Link>
+        </div>
+      </section>
+
+      {/* Features */}
+      <section className="px-6 py-20 max-w-5xl mx-auto">
+        <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">
+          为什么选择 AI 内容工坊？
+        </h2>
+        <div className="grid md:grid-cols-3 gap-8">
+          {[
+            {
+              icon: '⚡',
+              title: '极速生成',
+              desc: '几分钟内完成多平台内容创作，告别熬夜写稿'
+            },
+            {
+              icon: '🎯',
+              title: '平台适配',
+              desc: 'AI 智能适配各平台风格，小红书更口语化，公众号更专业'
+            },
+            {
+              icon: '💡',
+              title: '创意激发',
+              desc: '不知道写什么？AI 帮你头脑风暴，提供灵感'
+            }
+          ].map((feature, idx) => (
+            <div key={idx} className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100">
+              <span className="text-4xl">{feature.icon}</span>
+              <h3 className="text-xl font-bold text-gray-900 mt-4">{feature.title}</h3>
+              <p className="text-gray-600 mt-2">{feature.desc}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Supported Platforms */}
+      <section className="px-6 py-20 bg-gray-50">
+        <div className="max-w-5xl mx-auto text-center">
+          <h2 className="text-3xl font-bold text-gray-900 mb-8">
+            支持的主流平台
+          </h2>
+          <div className="flex flex-wrap justify-center gap-6">
+            {[
+              { icon: '📕', name: '小红书', color: 'text-pink-600' },
+              { icon: '📰', name: '公众号', color: 'text-green-600' },
+              { icon: '💬', name: '朋友圈', color: 'text-green-500' },
+              { icon: '🎵', name: '抖音', color: 'text-gray-900' },
+            ].map((platform) => (
+              <div
+                key={platform.name}
+                className="flex items-center gap-2 px-6 py-3 bg-white rounded-full shadow-sm"
+              >
+                <span className="text-2xl">{platform.icon}</span>
+                <span className="font-medium text-gray-700">{platform.name}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="px-6 py-20 text-center">
+        <h2 className="text-3xl font-bold text-gray-900 mb-4">
+          准备好提升你的内容创作效率了吗？
+        </h2>
+        <p className="text-gray-600 mb-8">
+          注册即送 100 积分，可生成多篇内容
+        </p>
+        <Link
+          href="/register"
+          className="inline-block px-10 py-4 bg-purple-600 text-white rounded-xl font-medium hover:bg-purple-700 transition text-lg"
+        >
+          立即免费开始
+        </Link>
+      </section>
+
+      {/* Footer */}
+      <footer className="px-6 py-8 border-t border-gray-200">
+        <div className="max-w-5xl mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-xl">📝</span>
+            <span className="font-medium text-gray-700">AI 内容工坊</span>
+          </div>
+          <p className="text-sm text-gray-500">
+            © 2024 AI 内容工坊. All rights reserved.
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+      </footer>
     </div>
-  );
+  )
 }
