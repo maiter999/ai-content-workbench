@@ -3,229 +3,146 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 
-interface Stats {
-  credits: number
-  plan: string
-  todayContents: number
-  monthContents: number
-  recentContents: Array<{
-    id: string
-    title: string
-    topic: string
-    platforms: string
-    createdAt: string
-  }>
-}
-
 const quickActions = [
-  { href: '/hot-content', icon: '🔥', label: '爆款排行', color: 'bg-red-50 hover:bg-red-100', textColor: 'text-red-700' },
-  { href: '/xiaohongshu', icon: '📕', label: '小红书', color: 'bg-pink-50 hover:bg-pink-100', textColor: 'text-pink-700' },
-  { href: '/wechat', icon: '📰', label: '公众号', color: 'bg-green-50 hover:bg-green-100', textColor: 'text-green-700' },
-  { href: '/one-click', icon: '⚡', label: '一键生成', color: 'bg-yellow-50 hover:bg-yellow-100', textColor: 'text-yellow-700' },
-  { href: '/rewrite', icon: '✏️', label: '爆文改写', color: 'bg-blue-50 hover:bg-blue-100', textColor: 'text-blue-700' },
-  { href: '/knowledge', icon: '📚', label: '知识库', color: 'bg-purple-50 hover:bg-purple-100', textColor: 'text-purple-700' },
+  { href: '/hot-content', icon: '🔥', label: '爆文排行', color: 'bg-red-50' },
+  { href: '/xiaohongshu', icon: '📕', label: '小红书', color: 'bg-pink-50' },
+  { href: '/wechat', icon: '📰', label: '公众号', color: 'bg-green-50' },
+  { href: '/one-click', icon: '⚡', label: 'AI生成', color: 'bg-yellow-50' },
+  { href: '/rewrite', icon: '✏️', label: '爆款改写', color: 'bg-blue-50' },
+  { href: '/knowledge', icon: '📚', label: '专业知识库', color: 'bg-purple-50' },
 ]
 
+const mockRecentContents = [
+  { id: 1, title: '618种草指南｜回购N次的宝藏好物分享', platform: '小红书', time: '10分钟前' },
+  { id: 2, title: '深度测评｜2024年最值得入手的数码装备', platform: '公众号', time: '30分钟前' },
+  { id: 3, title: '朋友圈文案｜周末探店打卡指南', platform: '朋友圈', time: '1小时前' },
+  { id: 4, title: '抖音脚本｜3分钟说清楚什么是AI写作', platform: '抖音', time: '2小时前' },
+  { id: 5, title: '小红书爆款｜5个让笔记火起来的技巧', platform: '小红书', time: '3小时前' },
+]
+
+const mockHotContents = [
+  { id: 1, title: 'ChatGPT写作技巧｜如何让AI写出爆款文案', hot: '🔥 10w+阅读', platform: '小红书' },
+  { id: 2, title: '2024内容营销趋势分析报告', hot: '🔥 8.5w阅读', platform: '公众号' },
+  { id: 3, title: '短视频脚本公式｜3秒抓住观众眼球', hot: '🔥 6.2w阅读', platform: '抖音' },
+  { id: 4, title: '朋友圈高转化文案模板，直接套用', hot: '🔥 5.8w阅读', platform: '朋友圈' },
+  { id: 5, title: '小红书起号攻略｜从0到1完整教程', hot: '🔥 5.1w阅读', platform: '小红书' },
+]
+
+const platformColors: Record<string, string> = {
+  '小红书': 'text-pink-600 bg-pink-50',
+  '公众号': 'text-green-600 bg-green-50',
+  '朋友圈': 'text-blue-600 bg-blue-50',
+  '抖音': 'text-purple-600 bg-purple-50',
+}
+
 export default function DashboardPage() {
-  const [stats, setStats] = useState<Stats | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [stats, setStats] = useState({ credits: 0, todayContents: 0, monthContents: 0 })
+  const [activeTab, setActiveTab] = useState<'recent' | 'hot'>('recent')
 
   useEffect(() => {
     fetch('/api/stats')
       .then(res => res.json())
-      .then(data => {
-        setStats(data)
-        setLoading(false)
-      })
-      .catch(() => setLoading(false))
+      .then(setStats)
+      .catch(() => {})
   }, [])
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-purple-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
-          <p className="mt-4 text-gray-600">加载中...</p>
-        </div>
-      </div>
-    )
-  }
+  const contents = activeTab === 'recent' ? mockRecentContents : mockHotContents
 
   return (
     <div className="p-6 space-y-6">
-      {/* Page Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">首页</h1>
-        <p className="text-gray-600 mt-1">欢迎回来！快速开始你的内容创作之旅</p>
+        <h1 className="text-2xl font-bold">首页</h1>
+        <p className="text-gray-500 mt-1">快速开始内容创作</p>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-4 gap-4">
-        {/* Today's Stats */}
-        <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">今日生成</p>
-              <p className="text-3xl font-bold text-gray-900 mt-1">{stats?.todayContents || 0}</p>
-              <p className="text-sm text-green-600 mt-1">篇内容</p>
-            </div>
-            <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-2xl">
-              📊
-            </div>
-          </div>
+      {/* 统计卡片 */}
+      <div className="grid grid-cols-3 gap-4">
+        <div className="bg-white rounded-xl p-5">
+          <p className="text-sm text-gray-500">今日生成</p>
+          <p className="text-3xl font-bold mt-1">{stats.todayContents}</p>
         </div>
-
-        {/* Month Stats */}
-        <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">本月生成</p>
-              <p className="text-3xl font-bold text-gray-900 mt-1">{stats?.monthContents || 0}</p>
-              <p className="text-sm text-blue-600 mt-1">篇内容</p>
-            </div>
-            <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center text-2xl">
-              📈
-            </div>
-          </div>
+        <div className="bg-white rounded-xl p-5">
+          <p className="text-sm text-gray-500">本月生成</p>
+          <p className="text-3xl font-bold mt-1">{stats.monthContents}</p>
         </div>
-
-        {/* Credits */}
-        <div className="bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl p-5 text-white shadow-sm">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-white/80">剩余积分</p>
-              <p className="text-3xl font-bold mt-1">{stats?.credits || 0}</p>
-              <p className="text-sm text-white/80 mt-1">
-                {stats?.plan === 'pro' ? 'Pro 会员' : '免费用户'}
-              </p>
-            </div>
-            <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center text-2xl">
-              💎
-            </div>
+        <div className="bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl p-5 text-white flex items-center justify-between">
+          <div>
+            <p className="text-white/80">剩余积分</p>
+            <p className="text-3xl font-bold mt-1">{stats.credits}</p>
           </div>
-        </div>
-
-        {/* Quick Recharge */}
-        <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
-          <div className="flex items-center justify-between h-full">
-            <div>
-              <p className="text-sm text-gray-600">积分不足？</p>
-              <p className="text-lg font-bold text-gray-900 mt-1">立即充值</p>
-              <p className="text-sm text-purple-600 mt-1">享更多优惠</p>
-            </div>
-            <Link href="/account" className="px-4 py-2 bg-purple-600 text-white rounded-lg text-sm hover:bg-purple-700">
-              充值
-            </Link>
-          </div>
+          <Link
+            href="/account?tab=recharge"
+            className="px-4 py-2 bg-white text-purple-600 rounded-lg font-medium text-sm hover:bg-gray-50 transition shrink-0"
+          >
+            充值积分
+          </Link>
         </div>
       </div>
 
-      {/* Quick Actions */}
-      <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-        <h2 className="text-lg font-bold text-gray-900 mb-4">快捷功能</h2>
-        <div className="grid grid-cols-3 md:grid-cols-6 gap-4">
-          {quickActions.map((action) => (
+      {/* 快捷功能 */}
+      <div className="bg-white rounded-xl p-6">
+        <h2 className="font-semibold mb-4">快捷功能</h2>
+        <div className="grid grid-cols-6 gap-4">
+          {quickActions.map(action => (
             <Link
               key={action.href}
               href={action.href}
-              className={`flex flex-col items-center gap-2 p-4 rounded-xl transition ${action.color}`}
+              className={`flex flex-col items-center gap-2 p-4 rounded-xl ${action.color}`}
             >
               <span className="text-3xl">{action.icon}</span>
-              <span className={`text-sm font-medium ${action.textColor}`}>{action.label}</span>
+              <span className="text-sm font-medium">{action.label}</span>
             </Link>
           ))}
         </div>
       </div>
 
-      {/* Two Column Layout */}
-      <div className="grid grid-cols-2 gap-6">
-        {/* Popular Templates */}
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-bold text-gray-900">热门模板</h2>
-            <span className="text-sm text-purple-600">NEW</span>
-          </div>
-          <div className="space-y-3">
-            <div className="flex items-center gap-4 p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition cursor-pointer">
-              <span className="text-2xl">📕</span>
-              <div className="flex-1">
-                <p className="font-medium text-gray-900">小红书种草文案</p>
-                <p className="text-sm text-gray-500">高转化率的种草笔记模板</p>
-              </div>
-              <span className="text-purple-600">→</span>
-            </div>
-            <div className="flex items-center gap-4 p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition cursor-pointer">
-              <span className="text-2xl">📰</span>
-              <div className="flex-1">
-                <p className="font-medium text-gray-900">公众号深度文章</p>
-                <p className="text-sm text-gray-500">专业、深度、有见地</p>
-              </div>
-              <span className="text-purple-600">→</span>
-            </div>
-            <div className="flex items-center gap-4 p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition cursor-pointer">
-              <span className="text-2xl">🎵</span>
-              <div className="flex-1">
-                <p className="font-medium text-gray-900">抖音短视频脚本</p>
-                <p className="text-sm text-gray-500">吸引眼球的爆款脚本</p>
-              </div>
-              <span className="text-purple-600">→</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Recent Contents */}
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-bold text-gray-900">最近生成</h2>
-            <Link href="/account" className="text-sm text-purple-600 hover:text-purple-700">
-              查看全部 →
-            </Link>
-          </div>
-
-          {stats?.recentContents && stats.recentContents.length > 0 ? (
-            <div className="space-y-3">
-              {stats.recentContents.slice(0, 3).map((content) => (
-                <div
-                  key={content.id}
-                  className="flex items-center justify-between p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition"
-                >
-                  <div className="flex-1">
-                    <p className="font-medium text-gray-900">{content.title}</p>
-                    <p className="text-sm text-gray-500">{content.topic}</p>
-                  </div>
-                  <div className="text-sm text-gray-400">
-                    {new Date(content.createdAt).toLocaleDateString('zh-CN')}
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8">
-              <span className="text-5xl">📭</span>
-              <p className="text-gray-500 mt-4">还没有生成过内容</p>
-              <Link
-                href="/one-click"
-                className="inline-block mt-4 px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
-              >
-                开始生成
-              </Link>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Notice */}
-      <div className="bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl p-6 text-white">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="font-bold text-lg">🔥 新用户专属福利</h3>
-            <p className="text-white/80 mt-1">注册即送 100 积分，邀请好友再送 50 积分</p>
-          </div>
-          <Link
-            href="/account"
-            className="px-6 py-3 bg-white text-purple-600 rounded-lg font-medium hover:bg-gray-100 transition"
+      {/* 最近生成 / 爆款文章 Tab */}
+      <div className="bg-white rounded-xl overflow-hidden">
+        {/* Tab 切换 */}
+        <div className="flex border-b border-gray-200">
+          <button
+            onClick={() => setActiveTab('recent')}
+            className={`px-6 py-4 text-sm font-medium border-b-2 transition ${
+              activeTab === 'recent'
+                ? 'border-purple-600 text-purple-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700'
+            }`}
           >
-            了解更多
+            最近生成
+          </button>
+          <button
+            onClick={() => setActiveTab('hot')}
+            className={`px-6 py-4 text-sm font-medium border-b-2 transition ${
+              activeTab === 'hot'
+                ? 'border-purple-600 text-purple-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            爆款文章
+          </button>
+        </div>
+
+        {/* 文章列表 */}
+        <div className="divide-y divide-gray-100">
+          {contents.map(item => (
+            <div key={item.id} className="flex items-center gap-4 px-5 py-4 hover:bg-gray-50 transition cursor-pointer">
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-gray-900 truncate">{item.title}</p>
+                <p className="text-xs text-gray-400 mt-1">
+                  {activeTab === 'recent' ? item.time : item.hot}
+                </p>
+              </div>
+              <span className={`text-xs px-2 py-1 rounded-full shrink-0 ${platformColors[item.platform] || 'text-gray-600 bg-gray-50'}`}>
+                {item.platform}
+              </span>
+            </div>
+          ))}
+        </div>
+
+        {/* 查看更多 */}
+        <div className="px-5 py-3 border-t border-gray-100 text-center">
+          <Link href={activeTab === 'recent' ? '/history' : '/hot-content'} className="text-sm text-purple-600 hover:text-purple-700 font-medium">
+            查看更多 →
           </Link>
         </div>
       </div>

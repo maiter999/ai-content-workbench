@@ -14,6 +14,7 @@
   "dependencies": {
     "@napi-rs/canvas": "^1.0.0",
     "@prisma/client": "^5.22.0",
+    "alipay-sdk": "^4.14.0",
     "bcryptjs": "^3.0.3",
     "clsx": "^2.1.1",
     "dotenv": "^17.4.2",

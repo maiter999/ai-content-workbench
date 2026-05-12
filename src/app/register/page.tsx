@@ -58,7 +58,7 @@ export default function RegisterPage() {
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">📝 AI 内容工坊</h1>
+          <h1 className="text-3xl font-bold text-gray-900">📝 豹纹工坊</h1>
           <p className="text-gray-600 mt-2">多平台内容一键生成</p>
         </div>
 

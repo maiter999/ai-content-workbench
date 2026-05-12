@@ -15,7 +15,7 @@ export default async function HomePage() {
       <header className="px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <span className="text-2xl">📝</span>
-          <span className="font-bold text-xl text-gray-900">AI 内容工坊</span>
+          <span className="font-bold text-xl text-gray-900">豹纹工坊</span>
         </div>
         <div className="flex items-center gap-4">
           <Link
@@ -37,7 +37,7 @@ export default async function HomePage() {
       <section className="px-6 py-20 max-w-5xl mx-auto text-center">
         <h1 className="text-5xl md:text-6xl font-bold text-gray-900 leading-tight">
           一个主题，<br />
-          <span className="text-purple-600">五个平台</span>同时出稿
+          <span className="text-purple-600">多平台</span>同时出稿
         </h1>
         <p className="text-xl text-gray-600 mt-6 max-w-2xl mx-auto">
           告别繁琐的跨平台内容适配。输入一个主题，AI自动生成适配小红书、公众号、朋友圈、抖音等多个平台的内容。
@@ -61,7 +61,7 @@ export default async function HomePage() {
       {/* Features */}
       <section className="px-6 py-20 max-w-5xl mx-auto">
         <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">
-          为什么选择 AI 内容工坊？
+          为什么选择豹纹工坊？
         </h2>
         <div className="grid md:grid-cols-3 gap-8">
           {[
@@ -136,10 +136,10 @@ export default async function HomePage() {
         <div className="max-w-5xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="text-xl">📝</span>
-            <span className="font-medium text-gray-700">AI 内容工坊</span>
+            <span className="font-medium text-gray-700">豹纹工坊</span>
           </div>
           <p className="text-sm text-gray-500">
-            © 2024 AI 内容工坊. All rights reserved.
+            © 2024 豹纹工坊. All rights reserved.
           </p>
         </div>
       </footer>

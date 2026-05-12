@@ -6,15 +6,20 @@ import { cn } from '@/lib/utils'
 
 const navItems = [
   { href: '/dashboard', label: '首页', icon: '🏠' },
-  { href: '/hot-content', label: '爆文排行榜', icon: '🔥', badge: 'NEW' },
+  { href: '/hot-content', label: '爆文排行榜', icon: '🔥' },
   { href: '/one-click', label: 'AI一键生成', icon: '⚡' },
   { href: '/xiaohongshu', label: '小红书图文', icon: '📕' },
   { href: '/wechat', label: '公众号文章', icon: '📰' },
-  { href: '/rewrite', label: '爆文速改写', icon: '✏️' },
-  { href: '/generate-image', label: 'AI图片生成', icon: '🎨', badge: 'NEW' },
+  { href: '/rewrite', label: '爆款速改写', icon: '✏️' },
   { href: '/knowledge', label: '专业知识库', icon: '📚' },
+  { href: '/history', label: '生成文章', icon: '📜' },
+  { href: '/generate-image', label: 'AI图片生成', icon: '🎨' },
+]
+
+const bottomNavItems = [
   { href: '/account', label: '我的账户', icon: '💰' },
-  { href: '/agent', label: '代理后台', icon: '👥', badge: 'VIP' },
+  { href: '/agent', label: '代理后台', icon: '🤝' },
+  { href: '/settings', label: '设置', icon: '⚙️' },
 ]
 
 export function Sidebar() {
@@ -52,28 +57,33 @@ export function Sidebar() {
                 <span>{item.icon}</span>
                 <span>{item.label}</span>
               </div>
-              {item.badge && (
-                <span className={cn(
-                  'text-xs px-2 py-0.5 rounded-full',
-                  item.badge === 'NEW' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
-                )}>
-                  {item.badge}
-                </span>
-              )}
             </Link>
           )
         })}
       </nav>
 
-      {/* Settings */}
-      <div className="p-4 border-t border-gray-100">
-        <Link
-          href="/settings"
-          className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition"
-        >
-          <span>⚙️</span>
-          <span>设置</span>
-        </Link>
+      {/* 账户管理分组 */}
+      <div className="p-4 border-t border-gray-200">
+        <div className="space-y-1">
+          {bottomNavItems.map((item) => {
+            const isActive = pathname === item.href
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={cn(
+                  'flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition',
+                  isActive
+                    ? 'bg-purple-50 text-purple-700'
+                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                )}
+              >
+                <span>{item.icon}</span>
+                <span>{item.label}</span>
+              </Link>
+            )
+          })}
+        </div>
       </div>
     </aside>
   )

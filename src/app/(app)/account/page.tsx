@@ -1,269 +1,286 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
+import Image from 'next/image'
+import { CreditCard, Wallet, CheckCircle } from 'lucide-react'
 
-interface Transaction {
-  id: string
-  type: 'consume' | 'recharge'
-  amount: number
-  balance: number
-  description: string
-  platform?: string
-  createdAt: string
-}
+type TabType = 'account' | 'recharge'
 
-interface Package {
-  id: string
-  name: string
-  credits: number
-  price: number
-  perCredit: number
-  popular?: boolean
-  features: string[]
-}
+// 消费记录数据
+const consumptionRecords = [
+  { type: '对话', model: '标准', cost: 10.9, time: '04/29 15:11' },
+  { type: '对话', model: '标准', cost: 11.6, time: '04/29 15:10' },
+  { type: '文案生成', model: '标准', cost: 43.0, time: '04/28 15:11' },
+  { type: '文案生成', model: '快速', cost: 32.5, time: '04/26 21:52' },
+  { type: '对话', model: '标准', cost: 6.9, time: '04/26 21:51' },
+  { type: '对话', model: '标准', cost: 7.3, time: '04/18 12:53' },
+  { type: '对话', model: '标准', cost: 7.5, time: '04/18 12:53' },
+  { type: '对话', model: '标准', cost: 12.5, time: '04/18 12:52' },
+  { type: '搜索', model: 'search', cost: 7.5, time: '04/18 15:17' },
+  { type: '对话', model: '标准', cost: 10.5, time: '04/13 17:40' },
+  { type: '对话', model: '标准', cost: 9.3, time: '04/13 17:39' },
+  { type: '文案生成', model: '标准', cost: 11.2, time: '04/13 17:37' },
+  { type: '文案生成', model: '标准', cost: 40.4, time: '04/13 17:37' },
+  { type: '文案生成', model: '标准', cost: 15.1, time: '04/13 17:37' },
+  { type: '对话', model: '标准', cost: 38.7, time: '04/11 17:36' },
+]
+
+// 充值套餐
+const rechargePackages = [
+  { id: 'p1', credits: 880, price: 59, label: '' },
+  { id: 'p2', credits: 3500, price: 229, label: '推荐', popular: true },
+  { id: 'p3', credits: 7400, price: 499, label: '超值', popular: true },
+]
 
 export default function AccountPage() {
-  const [balance, setBalance] = useState(0)
-  const [plan, setPlan] = useState('free')
-  const [transactions, setTransactions] = useState<Transaction[]>([])
-  const [totalTransactions, setTotalTransactions] = useState(0)
-  const [page, setPage] = useState(1)
-  const [loading, setLoading] = useState(true)
-  const [selectedPackage, setSelectedPackage] = useState('standard')
+  const searchParams = useSearchParams()
+  const [activeTab, setActiveTab] = useState<TabType>('account')
+  const [balance, setBalance] = useState(681)
+  const [showQR, setShowQR] = useState(false)
+  const [paymentMethod, setPaymentMethod] = useState<'alipay' | 'wechat'>('alipay')
+  const [selectedPkg, setSelectedPkg] = useState('p2')
 
-  const packages: Package[] = [
-    { id: 'basic', name: '基础套餐', credits: 500, price: 99, perCredit: 0.20, features: ['有效期30天', '基础功能'] },
-    { id: 'standard', name: '标准套餐', credits: 1500, price: 299, perCredit: 0.20, popular: true, features: ['有效期90天', '高级功能', '优先队列'] },
-    { id: 'pro', name: '专业套餐', credits: 5000, price: 499, perCredit: 0.10, features: ['有效期180天', '全部功能', '专属客服'] },
-  ]
-
-  // 加载用户信息和交易记录
+  // 根据 URL 参数自动切换 Tab
   useEffect(() => {
-    fetchUserData()
-    fetchTransactions()
-  }, [page])
-
-  const fetchUserData = async () => {
-    try {
-      const res = await fetch('/api/auth/me')
-      const data = await res.json()
-      if (data.user) {
-        setBalance(data.user.credits)
-        setPlan(data.user.plan)
-      }
-    } catch (err) {
-      console.error('获取用户信息失败:', err)
+    const tab = searchParams.get('tab')
+    if (tab === 'recharge') {
+      setActiveTab('recharge')
     }
-  }
+  }, [searchParams])
 
-  const fetchTransactions = async () => {
-    try {
-      setLoading(true)
-      const res = await fetch(`/api/transactions?page=${page}&limit=10`)
-      const data = await res.json()
-      if (data.transactions) {
-        setTransactions(data.transactions)
-        setTotalTransactions(data.total)
-      }
-    } catch (err) {
-      console.error('获取交易记录失败:', err)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleRecharge = () => {
-    alert('支付功能开发中，即将上线！')
-    // TODO: Task #15 实现支付系统
-  }
-
-  const handleBuyPackage = async () => {
-    const pkg = packages.find(p => p.id === selectedPackage)
+  const handleRecharge = async () => {
+    const pkg = rechargePackages.find(p => p.id === selectedPkg)
     if (!pkg) return
 
-    alert(`支付功能开发中！\n\n套餐：${pkg.name}\n积分：${pkg.credits}\n价格：¥${pkg.price}`)
-    // TODO: Task #15 实现支付系统
-  }
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    return date.toLocaleString('zh-CN', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit'
+    await fetch('/api/payments/manual-order', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ packageId: pkg.id, credits: pkg.credits, amount: pkg.price })
     })
+    setShowQR(true)
   }
-
-  const totalPages = Math.ceil(totalTransactions / 10)
 
   return (
-    <div className="p-6">
-      {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">我的账户</h1>
-        <p className="text-gray-600 mt-1">管理您的账户余额和消费记录</p>
-      </div>
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-5xl mx-auto px-6 py-5">
+        {/* 收款码弹窗 */}
+        {showQR && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-2xl p-6 max-w-md w-full mx-4">
+              <h2 className="text-xl font-bold mb-4 text-center">扫码支付</h2>
 
-      <div className="grid grid-cols-3 gap-6">
-        {/* Left - Balance & Recharge */}
-        <div className="col-span-1 space-y-6">
-          {/* Balance Card */}
-          <div className="bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl p-6 text-white">
-            <div className="text-sm opacity-80 mb-2">账户余额</div>
-            <div className="text-4xl font-bold mb-4">{balance} <span className="text-xl">积分</span></div>
-            <div className="flex gap-3">
-              <button 
-                onClick={handleRecharge}
-                className="flex-1 py-2 bg-white/20 rounded-lg text-sm hover:bg-white/30 transition"
+              <div className="flex gap-2 mb-4">
+                <button
+                  onClick={() => setPaymentMethod('alipay')}
+                  className={`flex-1 py-2 rounded-lg text-sm font-medium transition ${paymentMethod === 'alipay' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-600'}`}
+                >
+                  支付宝
+                </button>
+                <button
+                  onClick={() => setPaymentMethod('wechat')}
+                  className={`flex-1 py-2 rounded-lg text-sm font-medium transition ${paymentMethod === 'wechat' ? 'bg-green-500 text-white' : 'bg-gray-100 text-gray-600'}`}
+                >
+                  微信
+                </button>
+              </div>
+
+              <div className="bg-gray-50 rounded-xl p-4 mb-4">
+                <div className="relative w-48 h-48 mx-auto bg-white rounded">
+                  <Image
+                    src={paymentMethod === 'alipay' ? '/alipay-qr.jpg' : '/wechat-qr.png'}
+                    alt="收款码"
+                    fill
+                    className="object-contain"
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <button onClick={() => setShowQR(false)} className="flex-1 py-3 bg-gray-100 rounded-lg text-sm font-medium hover:bg-gray-200 transition">
+                  取消
+                </button>
+                <button
+                  onClick={async () => {
+                    await fetch('/api/payments/confirm', { method: 'POST' })
+                    setShowQR(false)
+                    alert('支付成功！')
+                  }}
+                  className="flex-1 py-3 bg-amber-500 text-white rounded-lg text-sm font-medium hover:bg-amber-600 transition"
+                >
+                  已支付
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Tab切换 */}
+        <div className="flex gap-1 mb-6 border-b border-gray-200">
+          <button
+            onClick={() => setActiveTab('account')}
+            className={`px-5 py-3 text-sm font-medium transition border-b-2 ${
+              activeTab === 'account'
+                ? 'text-amber-600 border-amber-600'
+                : 'text-gray-500 border-transparent hover:text-gray-700'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <Wallet className="w-4 h-4" />
+              我的账户
+            </div>
+          </button>
+          <button
+            onClick={() => setActiveTab('recharge')}
+            className={`px-5 py-3 text-sm font-medium transition border-b-2 ${
+              activeTab === 'recharge'
+                ? 'text-amber-600 border-amber-600'
+                : 'text-gray-500 border-transparent hover:text-gray-700'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <CreditCard className="w-4 h-4" />
+              充值积分
+            </div>
+          </button>
+        </div>
+
+        {/* 我的账户 Tab */}
+        {activeTab === 'account' && (
+          <div className="space-y-5">
+            {/* 标题 */}
+            <div>
+              <h1 className="text-xl font-bold text-gray-900">我的账户</h1>
+              <p className="text-sm text-gray-500 mt-1">余额查看 · 消费记录</p>
+            </div>
+
+            {/* 余额卡片 */}
+            <div className="bg-white rounded-xl border border-gray-200 p-5 flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-500 mb-1">账户余额</p>
+                <p className="text-3xl font-bold text-gray-900">{balance} <span className="text-base font-normal text-gray-600">积分</span></p>
+              </div>
+              <button
+                onClick={() => setActiveTab('recharge')}
+                className="px-6 py-2.5 bg-amber-500 text-white rounded-lg text-sm font-medium hover:bg-amber-600 transition flex items-center gap-1"
               >
                 充值
-              </button>
-              <button 
-                onClick={handleBuyPackage}
-                className="flex-1 py-2 bg-white/20 rounded-lg text-sm hover:bg-white/30 transition"
-              >
-                购买套餐
+                <span className="text-xs">+</span>
               </button>
             </div>
-          </div>
 
-          {/* Quick Stats */}
-          <div className="bg-white rounded-xl shadow-sm p-6">
-            <h3 className="font-semibold text-gray-900 mb-4">账户信息</h3>
-            <div className="space-y-4">
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-600">当前套餐</span>
-                <span className="font-medium capitalize">{plan}</span>
+            {/* 消费记录表格 */}
+            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+              <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-2">
+                <Wallet className="w-4 h-4 text-gray-400" />
+                <h3 className="text-sm font-medium text-gray-700">消费记录</h3>
               </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-600">累计交易</span>
-                <span className="font-medium text-gray-900">{totalTransactions} 笔</span>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-gray-100 bg-gray-50/50">
+                      <th className="px-5 py-3 text-left text-xs font-medium text-gray-500">类型</th>
+                      <th className="px-5 py-3 text-left text-xs font-medium text-gray-500">模型</th>
+                      <th className="px-5 py-3 text-right text-xs font-medium text-gray-500">费用</th>
+                      <th className="px-5 py-3 text-right text-xs font-medium text-gray-500">时间</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {consumptionRecords.map((record, index) => (
+                      <tr key={index} className="border-b border-gray-50 hover:bg-gray-50/50 transition">
+                        <td className="px-5 py-3 text-sm text-gray-700">{record.type}</td>
+                        <td className="px-5 py-3 text-sm text-gray-500">{record.model}</td>
+                        <td className="px-5 py-3 text-sm text-gray-700 text-right">{record.cost} 积分</td>
+                        <td className="px-5 py-3 text-sm text-gray-400 text-right">{record.time}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>
+        )}
 
-          {/* Package Selection */}
-          <div className="bg-white rounded-xl shadow-sm p-6">
-            <h3 className="font-semibold text-gray-900 mb-4">推荐套餐</h3>
-            <div className="space-y-3">
-              {packages.map((pkg) => (
-                <button
-                  key={pkg.id}
-                  onClick={() => setSelectedPackage(pkg.id)}
-                  className={`w-full p-4 rounded-lg border-2 text-left transition ${
-                    selectedPackage === pkg.id
-                      ? 'border-purple-500 bg-purple-50'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="font-medium text-gray-900">{pkg.name}</span>
-                    <div className="flex items-center gap-2">
-                      {pkg.popular && (
-                        <span className="px-2 py-0.5 bg-pink-100 text-pink-700 rounded text-xs">
-                          推荐
-                        </span>
-                      )}
-                      <span className="font-bold text-purple-600">¥{pkg.price}</span>
-                    </div>
-                  </div>
-                  <div className="text-sm text-gray-500">
-                    {pkg.credits} 积分 · ¥{pkg.perCredit}/积分
-                  </div>
-                </button>
-              ))}
-            </div>
-            <button 
-              onClick={handleBuyPackage}
-              className="w-full mt-4 py-3 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition"
-            >
-              立即购买
-            </button>
-          </div>
-        </div>
-
-        {/* Right - Transaction History */}
-        <div className="col-span-2">
-          <div className="bg-white rounded-xl shadow-sm">
-            <div className="p-4 border-b border-gray-200">
-              <h2 className="text-lg font-semibold text-gray-900">消费记录</h2>
+        {/* 充值积分 Tab */}
+        {activeTab === 'recharge' && (
+          <div className="space-y-5">
+            {/* 标题 */}
+            <div>
+              <h1 className="text-xl font-bold text-gray-900">充值积分</h1>
+              <p className="text-sm text-gray-500 mt-1">当前余额 {balance} 积分</p>
             </div>
 
-            {/* Transaction List */}
-            <div className="divide-y divide-gray-100">
-              {loading ? (
-                <div className="p-8 text-center text-gray-500">
-                  <div className="animate-spin inline-block w-8 h-8 border-4 border-purple-500 border-t-transparent rounded-full mb-4"></div>
-                  <p>加载中...</p>
-                </div>
-              ) : transactions.length > 0 ? (
-                transactions.map((tx) => (
-                  <div key={tx.id} className="p-4 hover:bg-gray-50 transition">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                          tx.type === 'recharge'
-                            ? 'bg-green-100 text-green-600'
-                            : 'bg-gray-100 text-gray-600'
-                        }`}>
-                          {tx.type === 'recharge' ? '💰' : '📝'}
-                        </div>
-                        <div>
-                          <p className="font-medium text-gray-900">{tx.description}</p>
-                          <p className="text-sm text-gray-500">
-                            {tx.platform && `${tx.platform} · `}{formatDate(tx.createdAt)}
-                          </p>
-                        </div>
-                      </div>
-                      <div className={`font-bold ${tx.amount > 0 ? 'text-green-600' : 'text-red-500'}`}>
-                        {tx.amount > 0 ? '+' : ''}{tx.amount}
-                      </div>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="p-8 text-center text-gray-500">
-                  <p>暂无交易记录</p>
-                </div>
-              )}
-            </div>
-
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="p-4 border-t border-gray-200 flex justify-center gap-2">
-                <button 
-                  onClick={() => setPage(p => Math.max(1, p - 1))}
-                  disabled={page === 1}
-                  className="px-4 py-2 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 disabled:opacity-50"
-                >
-                  上一页
-                </button>
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+            {/* 选择充值套餐 */}
+            <div className="bg-white rounded-xl border border-gray-200 p-5">
+              <h3 className="text-sm font-medium text-gray-700 mb-4">选择充值套餐</h3>
+              <div className="grid grid-cols-3 gap-4">
+                {rechargePackages.map((pkg) => (
                   <button
-                    key={p}
-                    onClick={() => setPage(p)}
-                    className={`px-4 py-2 rounded-lg ${
-                      page === p
-                        ? 'bg-purple-600 text-white'
-                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    key={pkg.id}
+                    onClick={() => setSelectedPkg(pkg.id)}
+                    className={`relative p-5 rounded-xl border-2 text-center transition ${
+                      selectedPkg === pkg.id
+                        ? 'border-amber-500 bg-amber-50/50'
+                        : 'border-gray-200 hover:border-gray-300'
                     }`}
                   >
-                    {p}
+                    {pkg.label && (
+                      <span className={`absolute -top-2.5 left-1/2 -translate-x-1/2 px-2 py-0.5 text-xs font-medium rounded-full ${
+                        pkg.popular ? 'bg-red-500 text-white' : 'bg-gray-200 text-gray-600'
+                      }`}>
+                        {pkg.label}
+                      </span>
+                    )}
+                    <p className="text-2xl font-bold text-amber-600">{pkg.credits}</p>
+                    <p className="text-xs text-gray-500 mt-1">积分</p>
+                    <p className="text-lg font-bold text-gray-900 mt-3">¥{pkg.price}</p>
                   </button>
                 ))}
-                <button 
-                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                  disabled={page === totalPages}
-                  className="px-4 py-2 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 disabled:opacity-50"
+              </div>
+            </div>
+
+            {/* 支付方式 */}
+            <div className="bg-white rounded-xl border border-gray-200 p-5">
+              <h3 className="text-sm font-medium text-gray-700 mb-4">支付方式</h3>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setPaymentMethod('alipay')}
+                  className={`flex items-center gap-2 px-5 py-3 rounded-lg border-2 transition ${
+                    paymentMethod === 'alipay'
+                      ? 'border-blue-500 bg-blue-50 text-blue-700'
+                      : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                  }`}
                 >
-                  下一页
+                  {paymentMethod === 'alipay' && <CheckCircle className="w-4 h-4" />}
+                  <span className="text-sm font-medium">支付宝</span>
+                </button>
+                <button
+                  onClick={() => setPaymentMethod('wechat')}
+                  className={`flex items-center gap-2 px-5 py-3 rounded-lg border-2 transition ${
+                    paymentMethod === 'wechat'
+                      ? 'border-green-500 bg-green-50 text-green-700'
+                      : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                  }`}
+                >
+                  {paymentMethod === 'wechat' && <CheckCircle className="w-4 h-4" />}
+                  <span className="text-sm font-medium">微信支付</span>
                 </button>
               </div>
-            )}
+            </div>
+
+            {/* 确认支付按钮 */}
+            <button
+              onClick={handleRecharge}
+              className="w-full py-3.5 bg-amber-500 text-white rounded-xl text-base font-medium hover:bg-amber-600 transition shadow-lg shadow-amber-200"
+            >
+              确认支付，获得 {rechargePackages.find(p => p.id === selectedPkg)?.credits} 积分
+            </button>
+
+            <p className="text-xs text-gray-400 text-center">
+              充值即表示您同意《用户协议》和《隐私政策》
+            </p>
           </div>
-        </div>
+        )}
       </div>
     </div>
   )

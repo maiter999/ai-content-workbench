@@ -45,7 +45,7 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">📝 AI 内容工坊</h1>
+          <h1 className="text-3xl font-bold text-gray-900">📝 豹纹工坊</h1>
           <p className="text-gray-600 mt-2">多平台内容一键生成</p>
         </div>
 
@@ -93,9 +93,6 @@ export default function LoginPage() {
                 <input type="checkbox" className="w-4 h-4 text-purple-600 rounded" />
                 <span className="ml-2 text-sm text-gray-600">记住我</span>
               </label>
-              <Link href="/forgot-password" className="text-sm text-purple-600 hover:text-purple-700">
-                忘记密码？
-              </Link>
             </div>
 
             <button
