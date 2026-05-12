@@ -1,15 +1,25 @@
 'use client'
 
 import { useState } from 'react'
-import { Sparkles, Upload, FileText, Image, Copy, CheckCircle, Trash2 } from 'lucide-react'
+import { Sparkles, Upload, FileText, Image, Copy, CheckCircle, Trash2, AlertCircle } from 'lucide-react'
 
 const contentStyles = ['种草安利', '攻略评测', '避坑指南', '实拍探店', '数据对比']
+
+const contentStyleDescs: Record<string, string> = {
+  '种草安利': '真实感 + 情绪价值，"闺蜜式"按头安利',
+  '攻略评测': '专业度 + 可操作性，保姆级教程',
+  '避坑指南': '痛点放大 + 求生欲，避免踩坑',
+  '实拍探店': '氛围感 + 本地生活导流',
+  '数据对比': '理性分析 + 决策导购',
+}
 
 const modelLevels = [
   { id: 'fast', name: '快速', desc: '快速响应' },
   { id: 'standard', name: '标准', desc: '平衡速度与质量' },
   { id: 'think', name: '思考', desc: '深度思考更精准' },
 ]
+
+const industries = ['科技', '教育', '餐饮', '美妆', '旅游', '母婴', '健康', '金融', '房产']
 
 export default function XiaohongshuPage() {
   const [topic, setTopic] = useState('')
@@ -25,6 +35,7 @@ export default function XiaohongshuPage() {
   const [result, setResult] = useState('')
   const [coverImage, setCoverImage] = useState('')
   const [copied, setCopied] = useState(false)
+  const [error, setError] = useState('')
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -39,24 +50,36 @@ export default function XiaohongshuPage() {
     if (!topic) return
     setIsGenerating(true)
     setResult('')
+    setError('')
 
-    setTimeout(() => {
-      setResult(`# ${topic}
+    try {
+      const response = await fetch('/api/xiaohongshu/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          topic,
+          contentStyle,
+          industry,
+          requirements,
+          materials,
+          modelLevel
+        })
+      })
 
-姐妹们！这个${topic}真的太绝了！✨
+      const data = await response.json()
 
-最近我发现了一个超级好用的方法，专门针对${topic}，效果真的惊艳到我了！
+      if (!response.ok) {
+        setError(data.error || '生成失败')
+        setIsGenerating(false)
+        return
+      }
 
-**操作步骤：**
-1. 第一步：准备好所有材料
-2. 第二步：按照顺序进行操作
-3. 第三步：等待效果显现
-
-真的超级简单，新手也能轻松上手！💪
-
-#${topic} #干货分享 #必看`)
+      setResult(data.content)
+    } catch (err) {
+      setError('网络错误，请稍后重试')
+    } finally {
       setIsGenerating(false)
-    }, 2000)
+    }
   }
 
   const handleGenerateCover = async () => {
@@ -87,6 +110,14 @@ export default function XiaohongshuPage() {
         <div className="grid grid-cols-2 gap-5">
           {/* 左侧表单 */}
           <div className="space-y-3">
+            {/* 错误提示 */}
+            {error && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-center gap-2 text-red-600 text-sm">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                {error}
+              </div>
+            )}
+
             {/* 主题 */}
             <div className="bg-white rounded-xl border border-gray-200 p-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -113,6 +144,7 @@ export default function XiaohongshuPage() {
               >
                 {contentStyles.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
+              <p className="text-xs text-gray-500 mt-2">{contentStyleDescs[contentStyle]}</p>
             </div>
 
             {/* 行业 */}
@@ -124,15 +156,7 @@ export default function XiaohongshuPage() {
                 className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent bg-white"
               >
                 <option value="">通用</option>
-                <option value="科技">科技</option>
-                <option value="教育">教育</option>
-                <option value="餐饮">餐饮</option>
-                <option value="美妆">美妆</option>
-                <option value="旅游">旅游</option>
-                <option value="母婴">母婴</option>
-                <option value="健康">健康</option>
-                <option value="金融">金融</option>
-                <option value="房产">房产</option>
+                {industries.map(i => <option key={i} value={i}>{i}</option>)}
               </select>
             </div>
 
@@ -167,7 +191,7 @@ export default function XiaohongshuPage() {
               <textarea
                 value={requirements}
                 onChange={(e) => setRequirements(e.target.value)}
-                placeholder="输入补充要求..."
+                placeholder="输入补充要求，如：希望突出性价比、适合学生党..."
                 rows={2}
                 className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent resize-none"
               />
@@ -249,6 +273,8 @@ export default function XiaohongshuPage() {
                 <div className="flex items-center gap-2">
                   <FileText className="w-4 h-4 text-gray-500" />
                   <span className="text-sm font-medium text-gray-700">文章内容</span>
+                  <span className="text-xs text-gray-400">|</span>
+                  <span className="text-xs text-pink-500">{contentStyle}</span>
                 </div>
                 {result && (
                   <button
@@ -263,17 +289,19 @@ export default function XiaohongshuPage() {
               <div className="p-4">
                 {isGenerating ? (
                   <div className="flex flex-col items-center justify-center py-12">
-                    <div className="w-10 h-10 border-3 border-pink-500 border-t-transparent rounded-full animate-spin mb-4" />
+                    <div className="w-10 h-10 border-4 border-pink-500 border-t-transparent rounded-full animate-spin mb-4" />
                     <p className="text-sm text-gray-500">AI正在创作中...</p>
+                    <p className="text-xs text-gray-400 mt-1">风格：{contentStyle}</p>
                   </div>
                 ) : result ? (
-                  <div className="text-sm whitespace-pre-wrap text-gray-700 max-h-60 overflow-y-auto">
+                  <div className="text-sm whitespace-pre-wrap text-gray-700 max-h-96 overflow-y-auto prose prose-sm max-w-none">
                     {result}
                   </div>
                 ) : (
                   <div className="flex flex-col items-center justify-center py-12 text-gray-400">
                     <FileText className="w-10 h-10 mx-auto mb-2 opacity-50" />
                     <p className="text-sm">填写左侧表单，点击生成文案</p>
+                    <p className="text-xs mt-1">选择风格后，系统会使用对应提示词生成</p>
                   </div>
                 )}
               </div>
