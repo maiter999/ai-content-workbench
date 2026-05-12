@@ -1,8 +1,11 @@
-import { prisma } from './prisma'
+import { prisma } from '@/lib/prisma'
 
+/**
+ * 创建交易记录（内部调用）
+ */
 export async function createTransaction(
   userId: string,
-  type: 'charge' | 'consume',
+  type: 'recharge' | 'consume',
   amount: number,
   description: string,
   platform?: string
@@ -39,22 +42,4 @@ export async function createTransaction(
   })
 
   return transaction
-}
-
-// 计算内容生成所需积分
-export function calculateCreditsNeeded(
-  platforms: string[],
-  hasImage: boolean = false
-): number {
-  let credits = 0
-  
-  // 每个平台消耗10积分
-  credits += platforms.length * 10
-  
-  // 如果生成图片，每个平台额外消耗20积分
-  if (hasImage) {
-    credits += platforms.length * 20
-  }
-  
-  return credits
 }
