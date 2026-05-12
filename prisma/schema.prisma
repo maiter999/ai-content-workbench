@@ -3,8 +3,8 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
 }
 
 model User {
@@ -17,9 +17,9 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  contents Content[]
-  transactions Transaction[]  // 添加这行
-  orders Order[]  // 添加这行
+  contents     Content[]
+  transactions Transaction[]
+  orders       Order[]
 
   @@map("users")
 }
@@ -44,11 +44,11 @@ model Content {
 model Transaction {
   id          String   @id @default(uuid())
   userId      String
-  type        String   // 'consume' | 'recharge'
-  amount      Int      // 积分变化量（正数为充值，负数为消费）
-  balance     Int      // 变更后余额
-  description String   // 描述（如：小红书图文生成、充值积分）
-  platform    String?  // 平台（如：xiaohongshu、wechat，充值时为null）
+  type        String
+  amount      Int
+  balance     Int
+  description String
+  platform    String?
   createdAt   DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -57,16 +57,16 @@ model Transaction {
 }
 
 model Order {
-  id           String   @id @default(uuid())
-  userId       String
-  packageId    String   // 'basic' | 'standard' | 'pro'
-  amount       Int      // 支付金额（分）
-  credits      Int      // 购买积分数量
-  status       String   @default("pending") // 'pending' | 'paid' | 'failed' | 'refunded'
-  paymentMethod String? // 'wechat' | 'alipay'
-  transactionId String? // 第三方支付交易号
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id            String   @id @default(uuid())
+  userId        String
+  packageId     String
+  amount        Int
+  credits       Int
+  status        String   @default("pending")
+  paymentMethod String?
+  transactionId String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
