@@ -1,6 +1,19 @@
 import { prisma } from '@/lib/prisma'
 
 /**
+ * 计算AI生成所需的积分
+ */
+export function calculateCreditsNeeded(model: string): number {
+  // 根据模型档位计算积分消耗
+  const creditMap: Record<string, number> = {
+    'deepseek-chat': 10,      // 基础版 - 10积分/次
+    'deepseek-chat-pro': 30,  // 专业版 - 30积分/次
+    'deepseek-chat-max': 80,  // 旗舰版 - 80积分/次
+  }
+  return creditMap[model] || 10
+}
+
+/**
  * 创建交易记录（内部调用）
  */
 export async function createTransaction(
