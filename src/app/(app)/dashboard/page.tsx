@@ -124,7 +124,7 @@ export default function DashboardPage() {
 
         {/* 文章列表 */}
         <div className="divide-y divide-gray-100">
-          {contents.map(item => (
+          {contents.map((item: any) => (
             <div key={item.id} className="flex items-center gap-4 px-5 py-4 hover:bg-gray-50 transition cursor-pointer">
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-gray-900 truncate">{item.title}</p>
