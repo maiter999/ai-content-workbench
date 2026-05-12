@@ -3,14 +3,31 @@ import { prisma } from '@/lib/prisma'
 /**
  * 计算AI生成所需的积分
  */
-export function calculateCreditsNeeded(model: string): number {
-  // 根据模型档位计算积分消耗
-  const creditMap: Record<string, number> = {
-    'deepseek-chat': 10,      // 基础版 - 10积分/次
-    'deepseek-chat-pro': 30,  // 专业版 - 30积分/次
-    'deepseek-chat-max': 80,  // 旗舰版 - 80积分/次
+export function calculateCreditsNeeded(platforms: string[] = ['default'], isImage: boolean = false): number {
+  // 根据平台和类型计算积分消耗
+  const baseCredits: Record<string, number> = {
+    'default': 10,
+    'deepseek': 10,
+    'qwen': 8,
+    'wenxin': 10,
+    'spark': 10,
+    'glm': 10
   }
-  return creditMap[model] || 10
+
+  // 基础积分
+  let credits = baseCredits['default']
+  for (const platform of platforms) {
+    if (baseCredits[platform]) {
+      credits = Math.max(credits, baseCredits[platform])
+    }
+  }
+
+  // 图片生成消耗更多积分
+  if (isImage) {
+    credits *= 2
+  }
+
+  return credits
 }
 
 /**
