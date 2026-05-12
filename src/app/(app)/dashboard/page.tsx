@@ -46,7 +46,7 @@ export default function DashboardPage() {
       .catch(() => {})
   }, [])
 
-  const contents = activeTab === 'recent' ? mockRecentContents : mockHotContents as typeof mockRecentContents
+  const contents: any = activeTab === 'recent' ? mockRecentContents : mockHotContents
 
   return (
     <div className="p-6 space-y-6">
