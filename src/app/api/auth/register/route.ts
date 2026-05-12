@@ -48,10 +48,15 @@ export async function POST(request: Request) {
         credits: user.credits
       }
     })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Register error:', error)
+    // 返回详细错误信息用于调试（生产环境可移除）
     return NextResponse.json(
-      { error: '注册失败，请稍后重试' },
+      {
+        error: '注册失败，请稍后重试',
+        debug: process.env.NODE_ENV !== 'production' ? error.message : undefined,
+        code: error.code
+      },
       { status: 500 }
     )
   }
