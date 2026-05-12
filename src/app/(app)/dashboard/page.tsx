@@ -46,7 +46,7 @@ export default function DashboardPage() {
       .catch(() => {})
   }, [])
 
-  const contents = activeTab === 'recent' ? mockRecentContents : mockHotContents
+  const contents = activeTab === 'recent' ? mockRecentContents : mockHotContents as typeof mockRecentContents
 
   return (
     <div className="p-6 space-y-6">
@@ -129,7 +129,7 @@ export default function DashboardPage() {
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-gray-900 truncate">{item.title}</p>
                 <p className="text-xs text-gray-400 mt-1">
-                  {activeTab === 'recent' ? item.time : item.hot}
+                  {'time' in item ? item.time : 'hot' in item ? item.hot : ''}
                 </p>
               </div>
               <span className={`text-xs px-2 py-1 rounded-full shrink-0 ${platformColors[item.platform] || 'text-gray-600 bg-gray-50'}`}>
