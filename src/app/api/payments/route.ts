@@ -89,7 +89,7 @@ export async function PUT(request: NextRequest) {
 
       await createTransaction(
         order.userId,
-        'charge',
+        'recharge',
         order.credits,
         `充值积分（${order.packageId}套餐）`,
         undefined
