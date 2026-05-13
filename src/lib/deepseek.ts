@@ -22,6 +22,8 @@ function getDeepSeekClient() {
 
 export { getDeepSeekClient }
 
+export type Platform = 'xiaohongshu' | 'wechat' | 'douyin'
+
 export interface GenerateRequest {
   topic: string
   platforms: Platform[]
