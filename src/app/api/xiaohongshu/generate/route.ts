@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { getCurrentUser } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { buildPrompt, type XiaohongshuStyle } from '@/lib/prompts/xiaohongshu'
+import { createTransaction } from '@/lib/transactions'
 import OpenAI from 'openai'
 
 const deepseek = new OpenAI({
@@ -9,10 +10,36 @@ const deepseek = new OpenAI({
   apiKey: process.env.DEEPSEEK_API_KEY || ''
 })
 
-const modelMap = {
-  fast: 'deepseek-chat',
-  standard: 'deepseek-chat',
-  think: 'deepseek-reasoner'
+// 模型档位配置
+interface ModelConfig {
+  model: string
+  temperature: number
+  max_tokens: number
+  search_replace_newline?: boolean  // 智能搜索
+  thinking_depth?: string  // 思考深度
+}
+
+const modelConfig: Record<string, ModelConfig> = {
+  // 快速模式 - DeepSeek 快速响应
+  'fast': {
+    model: 'deepseek-chat',
+    temperature: 0.9,
+    max_tokens: 1500
+  },
+  // 标准模式 - DeepSeek 专家模式
+  'standard': {
+    model: 'deepseek-chat',
+    temperature: 0.8,
+    max_tokens: 2000
+  },
+  // 思考模式 - DeepSeek 专家 + 深度思考 + 智能搜索
+  'think': {
+    model: 'deepseek-reasoner',
+    temperature: 0.5,
+    max_tokens: 4000,
+    search_replace_newline: true,
+    thinking_depth: 'high'
+  }
 }
 
 export async function POST(request: Request) {
@@ -43,25 +70,37 @@ export async function POST(request: Request) {
     })
 
     // 调用 DeepSeek
-    const model = modelMap[modelLevel as keyof typeof modelMap] || 'deepseek-chat'
-    
-    const response = await deepseek.chat.completions.create({
-      model,
+    const config = modelConfig[modelLevel as keyof typeof modelConfig] || modelConfig.standard
+    const requestParams: any = {
+      model: config.model,
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt }
       ],
-      temperature: 0.8,
-      max_tokens: 2000
-    })
+      temperature: config.temperature,
+      max_tokens: config.max_tokens
+    }
+
+    // 思考模式额外参数
+    if (config.search_replace_newline) {
+      requestParams.search_replace_newline = true
+    }
+    if (config.thinking_depth) {
+      requestParams.thinking_depth = config.thinking_depth
+    }
+    
+    const response = await deepseek.chat.completions.create(requestParams)
 
     const content = response.choices[0]?.message?.content || ''
 
-    // 扣除积分
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { credits: { decrement: 1 } }
-    })
+    // 扣除积分（创建交易记录）
+    await createTransaction(
+      user.id,
+      'consume',
+      -1,
+      `生成小红书文章：${topic}`,
+      'xiaohongshu'
+    )
 
     // 保存内容记录
     await prisma.content.create({

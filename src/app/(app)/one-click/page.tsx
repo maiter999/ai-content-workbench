@@ -4,10 +4,12 @@ import { useState } from 'react'
 import { Sparkles, Upload, FileText, Image, Copy, CheckCircle, Trash2 } from 'lucide-react'
 
 const modelLevels = [
-  { id: 'fast', name: '快速', desc: '快速响应' },
-  { id: 'standard', name: '标准', desc: '平衡速度与质量' },
-  { id: 'think', name: '思考', desc: '深度思考更精准' },
+  { id: 'fast', name: '⚡ 快速', desc: 'AI 快速模式', color: 'bg-purple-500' },
+  { id: 'standard', name: '📝 标准', desc: 'AI 专家模式', color: 'bg-purple-600' },
+  { id: 'think', name: '🧠 思考', desc: '深度思考 + 智能搜索', color: 'bg-purple-700' },
 ]
+
+const industries = ['房地产', '科技', '教育', '餐饮', '美妆', '旅游', '母婴', '健康', '金融', '医疗', '法律', '宠物', '汽车', '家居', '婚庆', '电商', '职场', '摄影', '农业']
 
 const platforms = [
   { id: 'wechat', name: '公众号', color: 'green' },
@@ -31,6 +33,8 @@ export default function OneClickPage() {
   const [results, setResults] = useState<Record<string, { content: string }>>({})
   const [platformImages, setPlatformImages] = useState<Record<string, string>>({})
   const [copied, setCopied] = useState<string | null>(null)
+  const [imageErrors, setImageErrors] = useState<Record<string, string>>({})
+  const [error, setError] = useState('')
 
   const togglePlatform = (id: string) => {
     setSelectedPlatforms(prev =>
@@ -48,53 +52,120 @@ export default function OneClickPage() {
   }
 
   const handleGenerate = async () => {
-    if (!topic) return
+    if (!topic || selectedPlatforms.length === 0) return
     setIsGenerating(true)
     setResults({})
+    setError('')
 
-    setTimeout(() => {
-      const newResults: Record<string, { content: string }> = {}
+    const newResults: Record<string, { content: string }> = {}
 
-      selectedPlatforms.forEach(p => {
-        const platform = platforms.find(pl => pl.id === p)
-        if (platform) {
-          newResults[p] = {
-            content: `【${platform.name}内容】
-
-# ${topic}
-
-> 风格：${modelLevel === 'think' ? '深度分析' : modelLevel === 'fast' ? '简洁快速' : '标准风格'}
-
-这是一篇关于"${topic}"的${platform.name}内容...
-
-正文内容生成中，包含详细的分析和实用的建议。
-
----
-
-#${topic} #内容创作 #AI助手`,
-          }
+    // 为每个选中的平台生成内容
+    for (const pId of selectedPlatforms) {
+      try {
+        let apiUrl = ''
+        let requestBody: any = {
+          topic,
+          industry,
+          requirements,
+          materials,
+          modelLevel
         }
-      })
 
-      setResults(newResults)
-      setIsGenerating(false)
-    }, 2000)
+        // 根据平台选择API
+        switch (pId) {
+          case 'xiaohongshu':
+            apiUrl = '/api/xiaohongshu/generate'
+            requestBody.contentStyle = '种草安利'  // 默认风格
+            break
+          case 'wechat':
+            apiUrl = '/api/wechat/generate'
+            requestBody.contentStyle = '专业深度'  // 默认风格
+            break
+          case 'moments':
+            apiUrl = '/api/moments/generate'
+            requestBody.contentStyle = '吐槽共鸣'  // 默认风格
+            break
+          case 'douyin':
+            // 抖音脚本使用小红书API（类似短视频脚本）
+            apiUrl = '/api/xiaohongshu/generate'
+            requestBody.contentStyle = '攻略评测'
+            break
+          case 'miniprogram':
+            apiUrl = '/api/miniprogram/generate'
+            requestBody.contentStyle = '探店旅行'  // 默认风格
+            break
+        }
+
+        const response = await fetch(apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(requestBody)
+        })
+
+        const data = await response.json()
+
+        if (response.ok && data.content) {
+          newResults[pId] = { content: data.content }
+        }
+      } catch (err) {
+        console.error(`生成平台 ${pId} 内容失败:`, err)
+      }
+    }
+
+    setResults(newResults)
+    setIsGenerating(false)
   }
 
   const handleGenerateImages = async () => {
     if (Object.keys(results).length === 0) return
     setIsGeneratingImage(true)
+    setImageErrors({})
 
-    setTimeout(() => {
-      const newImages: Record<string, string> = {}
-      selectedPlatforms.forEach(p => {
-        if (results[p]) {
-          newImages[p] = `https://picsum.photos/800/400?random=${Date.now() + Math.random()}`
+    // 为每个平台生成配图
+    const newImages: Record<string, string> = {}
+
+    for (const pId of selectedPlatforms) {
+      if (results[pId]) {
+        try {
+          // 根据平台确定风格和尺寸
+          const platformStyle = getPlatformImageStyle(pId)
+
+          const response = await fetch('/api/xiaohongshu/image', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              articleContent: results[pId].content,
+              contentStyle: platformStyle.style,
+              imageSize: platformStyle.size
+            })
+          })
+
+          const data = await response.json()
+
+          if (response.ok && data.imageUrl) {
+            newImages[pId] = data.imageUrl
+          }
+        } catch (err) {
+          console.error(`生成平台 ${pId} 配图失败:`, err)
+          setImageErrors(prev => ({ ...prev, [pId]: '生成失败' }))
         }
-      })
-      setPlatformImages(newImages)
-      setIsGeneratingImage(false)
-    }, 2000)
+      }
+    }
+
+    setPlatformImages(prev => ({ ...prev, ...newImages }))
+    setIsGeneratingImage(false)
+  }
+
+  // 根据平台获取对应的图片风格和尺寸
+  const getPlatformImageStyle = (platformId: string) => {
+    const styles: Record<string, { style: string; size: string }> = {
+      'xiaohongshu': { style: '种草安利', size: '768*1152' },      // 2:3 接近3:4
+      'wechat': { style: '专业深度', size: '720*1280' },             // 9:16 竖版
+      'moments': { style: '种草安利', size: '1024*1024' },          // 1:1
+      'douyin': { style: '攻略评测', size: '768*1152' },            // 2:3 接近3:4
+      'miniprogram': { style: '种草安利', size: '768*1152' },      // 2:3 接近3:4
+    }
+    return styles[platformId] || { style: '种草安利', size: '768*1152' }
   }
 
   const copyContent = (id: string, content: string) => {
@@ -125,6 +196,14 @@ export default function OneClickPage() {
         <div className="grid grid-cols-2 gap-5">
           {/* 左侧表单 */}
           <div className="space-y-3">
+            {/* 错误提示 */}
+            {error && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-center gap-2 text-red-600 text-sm">
+                <span className="shrink-0">⚠️</span>
+                {error}
+              </div>
+            )}
+
             {/* 主题 */}
             <div className="bg-white rounded-xl border border-gray-200 p-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -139,24 +218,16 @@ export default function OneClickPage() {
               />
             </div>
 
-            {/* 行业 */}
+            {/* 行业领域 */}
             <div className="bg-white rounded-xl border border-gray-200 p-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">行业</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">行业领域</label>
               <select
                 value={industry}
                 onChange={(e) => setIndustry(e.target.value)}
                 className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white"
               >
                 <option value="">通用</option>
-                <option value="科技">科技</option>
-                <option value="教育">教育</option>
-                <option value="餐饮">餐饮</option>
-                <option value="美妆">美妆</option>
-                <option value="旅游">旅游</option>
-                <option value="母婴">母婴</option>
-                <option value="健康">健康</option>
-                <option value="金融">金融</option>
-                <option value="房产">房产</option>
+                {industries.map(i => <option key={i} value={i}>{i}</option>)}
               </select>
             </div>
 
@@ -314,7 +385,7 @@ export default function OneClickPage() {
               <div className="p-4">
                 {isGenerating ? (
                   <div className="flex flex-col items-center justify-center py-12">
-                    <div className="w-10 h-10 border-3 border-purple-600 border-t-transparent rounded-full animate-spin mb-4" />
+                    <div className="w-10 h-10 border-4 border-purple-600 border-t-transparent rounded-full animate-spin mb-4" />
                     <p className="text-sm text-gray-500">AI正在为{selectedPlatforms.length}个平台创作内容...</p>
                   </div>
                 ) : Object.keys(results).length > 0 ? (
@@ -357,7 +428,7 @@ export default function OneClickPage() {
               <div className="px-4 py-3 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Image className="w-4 h-4 text-gray-500" />
-                  <span className="text-sm font-medium text-gray-700">配图</span>
+                  <span className="text-sm font-medium text-gray-700">文章配图</span>
                 </div>
                 <button
                   onClick={handleGenerateImages}

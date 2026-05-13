@@ -8,7 +8,13 @@ export default async function AppLayout({
 }: {
   children: React.ReactNode
 }) {
-  const user = await getCurrentUser()
+  let user = null
+  
+  try {
+    user = await getCurrentUser()
+  } catch (error) {
+    console.error('Failed to get user:', error)
+  }
 
   if (!user) {
     redirect('/login')

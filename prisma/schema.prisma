@@ -3,8 +3,8 @@ generator client {
 }
 
 datasource db {
-  provider   = "postgresql"
-  url        = env("DATABASE_URL")
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
 }
 
 model User {
@@ -17,11 +17,94 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  contents     Content[]
-  transactions Transaction[]
-  orders       Order[]
+  contents      Content[]
+  transactions  Transaction[]
+  orders        Order[]
+  socialAccounts SocialAccount[]  // 自媒体账号
 
   @@map("users")
+}
+
+model SocialAccount {
+  id          String   @id @default(uuid())
+  userId      String
+  platform    String   @default("XIAOHONGSHU")
+  accountName String
+  accountId   String?
+  cookies     String?
+  token       String?
+  status      String   @default("active")
+  lastSyncAt  DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  stats    AccountStats[]
+  posts    PostData[]
+  comments Comment[]
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, platform, accountId])
+  @@map("social_accounts")
+}
+
+model AccountStats {
+  id         String   @id @default(uuid())
+  accountId  String
+  date       DateTime
+  postsCount Int      @default(0)
+  views      Int      @default(0)
+  comments   Int      @default(0)
+  shares     Int      @default(0)
+  favorites  Int      @default(0)
+  followers  Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  account SocialAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@unique([accountId, date])
+  @@map("account_stats")
+}
+
+model PostData {
+  id           String   @id @default(uuid())
+  accountId    String
+  platformPostId String?
+  title        String
+  content      String?
+  url          String?
+  views        Int      @default(0)
+  commentsCount Int      @default(0)
+  shares       Int      @default(0)
+  favorites    Int      @default(0)
+  publishedAt  DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  account  SocialAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  comments Comment[]
+
+  @@map("post_data")
+}
+
+model Comment {
+  id           String   @id @default(uuid())
+  accountId    String
+  postId       String?
+  platformCommentId String?
+  author       String?
+  content      String
+  reply        String?
+  repliedAt    DateTime?
+  status       String   @default("pending")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  account SocialAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  post    PostData?     @relation(fields: [postId], references: [id], onDelete: SetNull)
+
+  @@map("comments")
 }
 
 model Content {

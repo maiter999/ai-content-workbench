@@ -24,12 +24,12 @@ export function Header() {
       .then(data => {
         if (data.user) {
           setUser(data.user)
-        } else {
-          router.push('/login')
         }
       })
-      .catch(() => router.push('/login'))
-  }, [router])
+      .catch(() => {
+        // 静默处理，不跳转
+      })
+  }, [])
 
   const handleLogout = async () => {
     await fetch('/api/auth/logout', { method: 'POST' })
@@ -63,59 +63,59 @@ export function Header() {
             <span className="text-sm font-medium text-purple-700">操作指南</span>
           </button>
 
-        {/* Credits */}
-        <div className="flex items-center gap-2 px-4 py-2 bg-purple-50 rounded-full">
-          <span className="text-purple-600">💎</span>
-          <span className="text-sm font-medium text-purple-700">
-            {user?.credits ?? 0} 积分
-          </span>
-        </div>
-
-        {/* User menu */}
-        <div className="relative">
-          <button
-            onClick={() => setShowMenu(!showMenu)}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-50 transition"
-          >
-            <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
-              <span className="text-purple-600 font-medium">
-                {user?.name?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || 'U'}
-              </span>
-            </div>
-            <span className="text-sm font-medium text-gray-700">
-              {user?.name || user?.email?.split('@')[0] || '用户'}
+          {/* Credits */}
+          <div className="flex items-center gap-2 px-4 py-2 bg-purple-50 rounded-full">
+            <span className="text-purple-600">💎</span>
+            <span className="text-sm font-medium text-purple-700">
+              {user?.credits ?? 0} 积分
             </span>
-            <span className="text-gray-400">▼</span>
-          </button>
+          </div>
 
-          {showMenu && (
-            <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-100 py-1 z-50">
-              <div className="px-4 py-2 border-b border-gray-100">
-                <p className="text-sm font-medium text-gray-900">{user?.name || '用户'}</p>
-                <p className="text-xs text-gray-500">{user?.email}</p>
+          {/* User menu */}
+          <div className="relative">
+            <button
+              onClick={() => setShowMenu(!showMenu)}
+              className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-50 transition"
+            >
+              <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                <span className="text-purple-600 font-medium">
+                  {user?.name?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase() || 'U'}
+                </span>
               </div>
-              <Link
-                href="/account"
-                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-              >
-                💰 我的账户
-              </Link>
-              <Link
-                href="/settings"
-                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-              >
-                ⚙️ 设置
-              </Link>
-              <button
-                onClick={handleLogout}
-                className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
-              >
-                🚪 退出登录
-              </button>
-            </div>
-          )}
+              <span className="text-sm font-medium text-gray-700">
+                {user?.name || user?.email?.split('@')[0] || '用户'}
+              </span>
+              <span className="text-gray-400">▼</span>
+            </button>
+
+            {showMenu && (
+              <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-100 py-1 z-50">
+                <div className="px-4 py-2 border-b border-gray-100">
+                  <p className="text-sm font-medium text-gray-900">{user?.name || '用户'}</p>
+                  <p className="text-xs text-gray-500">{user?.email}</p>
+                </div>
+                <Link
+                  href="/account"
+                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                >
+                  💰 我的账户
+                </Link>
+                <Link
+                  href="/account?tab=settings"
+                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                >
+                  🔐 账户设置
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                >
+                  🚪 退出登录
+                </button>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
       </header>
 
       <GuideModal isOpen={showGuide} onClose={() => setShowGuide(false)} />

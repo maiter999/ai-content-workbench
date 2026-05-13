@@ -14,12 +14,12 @@ const contentStyleDescs: Record<string, string> = {
 }
 
 const modelLevels = [
-  { id: 'fast', name: '快速', desc: '快速响应' },
-  { id: 'standard', name: '标准', desc: '平衡速度与质量' },
-  { id: 'think', name: '思考', desc: '深度思考更精准' },
+  { id: 'fast', name: '⚡ 快速', desc: 'AI 快速模式', color: 'bg-pink-500' },
+  { id: 'standard', name: '📝 标准', desc: 'AI 专家模式', color: 'bg-pink-600' },
+  { id: 'think', name: '🧠 思考', desc: '深度思考 + 智能搜索', color: 'bg-pink-700' },
 ]
 
-const industries = ['科技', '教育', '餐饮', '美妆', '旅游', '母婴', '健康', '金融', '房产']
+const industries = ['房地产', '科技', '教育', '餐饮', '美妆', '旅游', '母婴', '健康', '金融', '医疗', '法律', '宠物', '汽车', '家居', '婚庆', '电商', '职场', '摄影', '农业']
 
 export default function XiaohongshuPage() {
   const [topic, setTopic] = useState('')
@@ -85,11 +85,34 @@ export default function XiaohongshuPage() {
   const handleGenerateCover = async () => {
     if (!result) return
     setIsGeneratingImage(true)
+    setError('')
 
-    setTimeout(() => {
-      setCoverImage(`https://picsum.photos/800/600?random=${Date.now()}`)
+    try {
+      const response = await fetch('/api/xiaohongshu/image', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          articleContent: result,
+          contentStyle: contentStyle,
+          imageSize: '768*1152'  // 小红书封面比例 2:3（通义万象支持）
+        })
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        setError(data.error || '生成配图失败')
+        setIsGeneratingImage(false)
+        return
+      }
+
+      setCoverImage(data.imageUrl)
+    } catch (err: any) {
+      console.error('生成配图错误:', err)
+      setError('网络错误，请稍后重试')
+    } finally {
       setIsGeneratingImage(false)
-    }, 2000)
+    }
   }
 
   const copyContent = () => {
@@ -147,9 +170,9 @@ export default function XiaohongshuPage() {
               <p className="text-xs text-gray-500 mt-2">{contentStyleDescs[contentStyle]}</p>
             </div>
 
-            {/* 行业 */}
+            {/* 行业领域 */}
             <div className="bg-white rounded-xl border border-gray-200 p-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">行业</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">行业领域</label>
               <select
                 value={industry}
                 onChange={(e) => setIndustry(e.target.value)}
@@ -312,7 +335,7 @@ export default function XiaohongshuPage() {
               <div className="px-4 py-3 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Image className="w-4 h-4 text-gray-500" />
-                  <span className="text-sm font-medium text-gray-700">配图</span>
+                  <span className="text-sm font-medium text-gray-700">文章配图</span>
                 </div>
                 <button
                   onClick={handleGenerateCover}

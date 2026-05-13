@@ -7,6 +7,9 @@ const rewriteModes = ['保留风格改写', '换人设改写', '精简缩写', '
 const titleStyles = ['悬念好奇型', '数字吸引型', '情感共鸣型', '干货分享型', '热点借势型']
 const platforms = ['小红书', '公众号', '朋友圈', '抖音']
 
+// 统一的19个行业领域
+const industries = ['房地产', '科技', '教育', '餐饮', '美妆', '旅游', '母婴', '健康', '金融', '医疗', '法律', '宠物', '汽车', '家居', '婚庆', '电商', '职场', '摄影', '农业']
+
 export default function RewritePage() {
   // 内容改写状态
   const [originalText, setOriginalText] = useState('')
@@ -33,14 +36,29 @@ export default function RewritePage() {
     setIsRewriting(true)
     setRewriteResults([])
 
-    setTimeout(() => {
-      setRewriteResults([
-        `【改写版本1】\n\n这是根据原文重新改写的版本，保留了核心信息但表达方式更加生动...`,
-        `【改写版本2】\n\n换一种角度来表达同样的内容，让读者有全新的阅读体验...`,
-        `【改写版本3】\n\n用更简洁有力的语言重新组织原文，突出重点...`,
-      ])
-      setIsRewriting(false)
-    }, 2000)
+    try {
+      const res = await fetch('/api/rewrite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          originalText,
+          mode: rewriteMode,
+          target: rewriteTarget,
+          requirements: rewriteRequirements
+        })
+      })
+      const data = await res.json()
+
+      if (data.success && data.result) {
+        setRewriteResults([data.result])
+      } else {
+        setRewriteResults([`❌ ${data.error || '改写失败'}`])
+      }
+    } catch (err) {
+      setRewriteResults(['❌ 网络错误，请稍后重试'])
+    }
+
+    setIsRewriting(false)
   }
 
   // 爆款标题生成
@@ -49,21 +67,33 @@ export default function RewritePage() {
     setIsTitleGenerating(true)
     setTitleResults([])
 
-    setTimeout(() => {
-      setTitleResults([
-        `${titleTopic}：99%的人都不知道的秘诀`,
-        `震惊！${titleTopic}竟然可以这样...`,
-        `${titleTopic}｜看完这篇你就懂了`,
-        `为什么你的${titleTopic}总是做不好？`,
-        `${titleTopic}的5个真相，看完沉默了`,
-        `手把手教你${titleTopic}，新手也能学会`,
-        `${titleTopic}：从入门到精通只需要3步`,
-        `别再错了！${titleTopic}的正确打开方式`,
-        `${titleTopic}｜业内人士不愿说的秘密`,
-        `关于${titleTopic}，我花了3年才悟出的道理`,
-      ])
-      setIsTitleGenerating(false)
-    }, 2000)
+    // 解析生成数量
+    const count = parseInt(titleCount.replace('个', '')) || 10
+
+    try {
+      const res = await fetch('/api/titles', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          topic: titleTopic,
+          industry: titleIndustry,
+          platform: titlePlatform,
+          style: titleStyle,
+          count
+        })
+      })
+      const data = await res.json()
+
+      if (data.success && data.titles) {
+        setTitleResults(data.titles)
+      } else {
+        setTitleResults([`❌ ${data.error || '生成失败'}`])
+      }
+    } catch (err) {
+      setTitleResults(['❌ 网络错误，请稍后重试'])
+    }
+
+    setIsTitleGenerating(false)
   }
 
   const copyRewriteResults = () => {
@@ -83,7 +113,7 @@ export default function RewritePage() {
       <div className="max-w-5xl mx-auto px-6 py-5">
         {/* 标题 */}
         <div className="mb-5">
-          <h1 className="text-xl font-bold text-gray-900">爆款速改写</h1>
+          <h1 className="text-xl font-bold text-gray-900">爆文速改写</h1>
           <p className="text-sm text-gray-500 mt-1">爆款文章改写 + 爆款标题生成</p>
         </div>
 
@@ -173,7 +203,7 @@ export default function RewritePage() {
                 {isRewriting ? (
                   <div className="flex items-center justify-center h-40">
                     <div className="text-center">
-                      <div className="w-10 h-10 border-3 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+                      <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
                       <p className="text-sm text-gray-500">AI正在改写中...</p>
                     </div>
                   </div>
@@ -225,16 +255,8 @@ export default function RewritePage() {
                 onChange={(e) => setTitleIndustry(e.target.value)}
                 className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent bg-white"
               >
-                <option value="">请选择行业</option>
-                <option value="科技">科技</option>
-                <option value="教育">教育</option>
-                <option value="餐饮">餐饮</option>
-                <option value="美妆">美妆</option>
-                <option value="旅游">旅游</option>
-                <option value="母婴">母婴</option>
-                <option value="健康">健康</option>
-                <option value="金融">金融</option>
-                <option value="房产">房产</option>
+                <option value="">通用</option>
+                {industries.map(i => <option key={i} value={i}>{i}</option>)}
               </select>
             </div>
 
@@ -304,7 +326,7 @@ export default function RewritePage() {
                 {isTitleGenerating ? (
                   <div className="flex items-center justify-center h-40">
                     <div className="text-center">
-                      <div className="w-10 h-10 border-3 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+                      <div className="w-10 h-10 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
                       <p className="text-sm text-gray-500">AI正在生成标题...</p>
                     </div>
                   </div>

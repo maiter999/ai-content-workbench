@@ -6,10 +6,12 @@ import { Sparkles, Upload, FileText, Image, Copy, CheckCircle, Trash2 } from 'lu
 const contentStyles = ['专业深度', '故事叙事', '干货清单', '热点评论', '通知公告']
 
 const modelLevels = [
-  { id: 'fast', name: '快速', desc: '快速响应' },
-  { id: 'standard', name: '标准', desc: '平衡速度与质量' },
-  { id: 'think', name: '思考', desc: '深度思考更精准' },
+  { id: 'fast', name: '⚡ 快速', desc: 'AI 快速模式', color: 'bg-green-500' },
+  { id: 'standard', name: '📝 标准', desc: 'AI 专家模式', color: 'bg-green-600' },
+  { id: 'think', name: '🧠 思考', desc: '深度思考 + 智能搜索', color: 'bg-green-700' },
 ]
+
+const industries = ['房地产', '科技', '教育', '餐饮', '美妆', '旅游', '母婴', '健康', '金融', '医疗', '法律', '宠物', '汽车', '家居', '婚庆', '电商', '职场', '摄影', '农业']
 
 export default function WechatPage() {
   const [topic, setTopic] = useState('')
@@ -25,6 +27,8 @@ export default function WechatPage() {
   const [result, setResult] = useState('')
   const [coverImage, setCoverImage] = useState('')
   const [copied, setCopied] = useState(false)
+  const [imageError, setImageError] = useState('')
+  const [error, setError] = useState('')
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -39,43 +43,69 @@ export default function WechatPage() {
     if (!topic) return
     setIsGenerating(true)
     setResult('')
+    setError('')
 
-    setTimeout(() => {
-      setResult(`# ${topic}
+    try {
+      const response = await fetch('/api/wechat/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          topic,
+          contentStyle,
+          industry,
+          requirements,
+          materials,
+          modelLevel
+        })
+      })
 
-## 引言
+      const data = await response.json()
 
-在当今快速发展的时代，${topic}已经成为一个不可忽视的重要话题。本文将深入探讨这一主题，为您带来专业的分析和独到的见解。
+      if (!response.ok) {
+        setError(data.error || '生成失败')
+        setIsGenerating(false)
+        return
+      }
 
-## 核心观点
-
-1. **深度分析**：${topic}的本质是什么？
-2. **实际应用**：如何在实践中运用？
-3. **未来趋势**：这个领域将走向何方？
-
-## 详细内容
-
-（正文内容生成中...）
-
-## 总结
-
-通过本文的分析，我们可以看到${topic}的重要性和应用价值。希望这篇文章能够为您带来启发和帮助。
-
----
-
-*感谢您的阅读，如果觉得有帮助，欢迎点赞、在看、转发！*`)
+      setResult(data.content)
+    } catch (err) {
+      setError('网络错误，请稍后重试')
+    } finally {
       setIsGenerating(false)
-    }, 2000)
+    }
   }
 
   const handleGenerateCover = async () => {
     if (!result) return
     setIsGeneratingImage(true)
+    setImageError('')
 
-    setTimeout(() => {
-      setCoverImage(`https://picsum.photos/800/400?random=${Date.now()}`)
+    try {
+      const response = await fetch('/api/xiaohongshu/image', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          articleContent: result,
+          contentStyle: contentStyle,
+          imageSize: '720*1280'  // 公众号封面 9:16 竖版（通义万象支持）
+        })
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        setImageError(data.error || '生成配图失败')
+        setIsGeneratingImage(false)
+        return
+      }
+
+      setCoverImage(data.imageUrl)
+    } catch (err: any) {
+      console.error('生成配图错误:', err)
+      setImageError('网络错误，请稍后重试')
+    } finally {
       setIsGeneratingImage(false)
-    }, 2000)
+    }
   }
 
   const copyContent = () => {
@@ -96,6 +126,14 @@ export default function WechatPage() {
         <div className="grid grid-cols-2 gap-5">
           {/* 左侧表单 */}
           <div className="space-y-3">
+            {/* 错误提示 */}
+            {error && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-center gap-2 text-red-600 text-sm">
+                <span className="shrink-0">⚠️</span>
+                {error}
+              </div>
+            )}
+
             {/* 主题 */}
             <div className="bg-white rounded-xl border border-gray-200 p-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -124,24 +162,16 @@ export default function WechatPage() {
               </select>
             </div>
 
-            {/* 行业 */}
+            {/* 行业领域 */}
             <div className="bg-white rounded-xl border border-gray-200 p-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">行业</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">行业领域</label>
               <select
                 value={industry}
                 onChange={(e) => setIndustry(e.target.value)}
                 className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white"
               >
                 <option value="">通用</option>
-                <option value="科技">科技</option>
-                <option value="教育">教育</option>
-                <option value="餐饮">餐饮</option>
-                <option value="美妆">美妆</option>
-                <option value="旅游">旅游</option>
-                <option value="母婴">母婴</option>
-                <option value="健康">健康</option>
-                <option value="金融">金融</option>
-                <option value="房产">房产</option>
+                {industries.map(i => <option key={i} value={i}>{i}</option>)}
               </select>
             </div>
 
@@ -272,7 +302,7 @@ export default function WechatPage() {
               <div className="p-4">
                 {isGenerating ? (
                   <div className="flex flex-col items-center justify-center py-12">
-                    <div className="w-10 h-10 border-3 border-green-600 border-t-transparent rounded-full animate-spin mb-4" />
+                    <div className="w-10 h-10 border-4 border-green-600 border-t-transparent rounded-full animate-spin mb-4" />
                     <p className="text-sm text-gray-500">AI正在创作中...</p>
                   </div>
                 ) : result ? (
@@ -293,7 +323,7 @@ export default function WechatPage() {
               <div className="px-4 py-3 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Image className="w-4 h-4 text-gray-500" />
-                  <span className="text-sm font-medium text-gray-700">配图</span>
+                  <span className="text-sm font-medium text-gray-700">文章配图</span>
                 </div>
                 <button
                   onClick={handleGenerateCover}

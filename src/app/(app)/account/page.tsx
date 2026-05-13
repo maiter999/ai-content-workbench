@@ -3,28 +3,9 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Image from 'next/image'
-import { CreditCard, Wallet, CheckCircle } from 'lucide-react'
+import { CreditCard, Wallet, CheckCircle, User, Shield } from 'lucide-react'
 
-type TabType = 'account' | 'recharge'
-
-// 消费记录数据
-const consumptionRecords = [
-  { type: '对话', model: '标准', cost: 10.9, time: '04/29 15:11' },
-  { type: '对话', model: '标准', cost: 11.6, time: '04/29 15:10' },
-  { type: '文案生成', model: '标准', cost: 43.0, time: '04/28 15:11' },
-  { type: '文案生成', model: '快速', cost: 32.5, time: '04/26 21:52' },
-  { type: '对话', model: '标准', cost: 6.9, time: '04/26 21:51' },
-  { type: '对话', model: '标准', cost: 7.3, time: '04/18 12:53' },
-  { type: '对话', model: '标准', cost: 7.5, time: '04/18 12:53' },
-  { type: '对话', model: '标准', cost: 12.5, time: '04/18 12:52' },
-  { type: '搜索', model: 'search', cost: 7.5, time: '04/18 15:17' },
-  { type: '对话', model: '标准', cost: 10.5, time: '04/13 17:40' },
-  { type: '对话', model: '标准', cost: 9.3, time: '04/13 17:39' },
-  { type: '文案生成', model: '标准', cost: 11.2, time: '04/13 17:37' },
-  { type: '文案生成', model: '标准', cost: 40.4, time: '04/13 17:37' },
-  { type: '文案生成', model: '标准', cost: 15.1, time: '04/13 17:37' },
-  { type: '对话', model: '标准', cost: 38.7, time: '04/11 17:36' },
-]
+type TabType = 'account' | 'recharge' | 'settings'
 
 // 充值套餐
 const rechargePackages = [
@@ -33,21 +14,83 @@ const rechargePackages = [
   { id: 'p3', credits: 7400, price: 499, label: '超值', popular: true },
 ]
 
+interface Transaction {
+  id: string
+  type: 'recharge' | 'consume'
+  amount: number
+  balance: number
+  description: string
+  platform?: string
+  createdAt: string
+}
+
 export default function AccountPage() {
   const searchParams = useSearchParams()
   const [activeTab, setActiveTab] = useState<TabType>('account')
-  const [balance, setBalance] = useState(681)
+  const [balance, setBalance] = useState(0)  // 从API获取
+  const [transactions, setTransactions] = useState<Transaction[]>([])  // 从API获取
+  const [isLoading, setIsLoading] = useState(true)
   const [showQR, setShowQR] = useState(false)
-  const [paymentMethod, setPaymentMethod] = useState<'alipay' | 'wechat'>('alipay')
+  const [paymentMethod, setPaymentMethod] = useState<'alipay'>('alipay')
   const [selectedPkg, setSelectedPkg] = useState('p2')
+
+  // 获取用户余额和消费记录
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        // 获取用户信息（包含余额）
+        const userRes = await fetch('/api/user/info')
+        const userData = await userRes.json()
+        if (userData.credits !== undefined) {
+          setBalance(userData.credits)
+        }
+
+        // 获取交易记录（消费记录）
+        const txRes = await fetch('/api/transactions?limit=20&type=consume')
+        const txData = await txRes.json()
+        if (txData.transactions) {
+          setTransactions(txData.transactions)
+        }
+      } catch (error) {
+        console.error('获取用户数据失败:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchUserData()
+  }, [])
 
   // 根据 URL 参数自动切换 Tab
   useEffect(() => {
     const tab = searchParams.get('tab')
     if (tab === 'recharge') {
       setActiveTab('recharge')
+    } else if (tab === 'settings') {
+      setActiveTab('settings')
     }
   }, [searchParams])
+
+  // 格式化日期
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr)
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    const hours = String(date.getHours()).padStart(2, '0')
+    const minutes = String(date.getMinutes()).padStart(2, '0')
+    return `${month}/${day} ${hours}:${minutes}`
+  }
+
+  // 获取操作类型名称
+  const getOperationName = (description: string, platform?: string) => {
+    if (description.includes('充值')) return '充值'
+    if (platform === 'xiaohongshu') return '小红书'
+    if (platform === 'wechat') return '公众号'
+    if (platform === 'moments') return '朋友圈'
+    if (platform === 'douyin') return '抖音'
+    if (platform === 'miniprogram') return '小程序'
+    return description || '文章生成'
+  }
 
   const handleRecharge = async () => {
     const pkg = rechargePackages.find(p => p.id === selectedPkg)
@@ -70,30 +113,18 @@ export default function AccountPage() {
             <div className="bg-white rounded-2xl p-6 max-w-md w-full mx-4">
               <h2 className="text-xl font-bold mb-4 text-center">扫码支付</h2>
 
-              <div className="flex gap-2 mb-4">
-                <button
-                  onClick={() => setPaymentMethod('alipay')}
-                  className={`flex-1 py-2 rounded-lg text-sm font-medium transition ${paymentMethod === 'alipay' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-600'}`}
-                >
-                  支付宝
-                </button>
-                <button
-                  onClick={() => setPaymentMethod('wechat')}
-                  className={`flex-1 py-2 rounded-lg text-sm font-medium transition ${paymentMethod === 'wechat' ? 'bg-green-500 text-white' : 'bg-gray-100 text-gray-600'}`}
-                >
-                  微信
-                </button>
-              </div>
-
               <div className="bg-gray-50 rounded-xl p-4 mb-4">
                 <div className="relative w-48 h-48 mx-auto bg-white rounded">
                   <Image
-                    src={paymentMethod === 'alipay' ? '/alipay-qr.jpg' : '/wechat-qr.png'}
-                    alt="收款码"
+                    src="/alipay-qr.jpg"
+                    alt="支付宝收款码"
                     fill
                     className="object-contain"
                   />
                 </div>
+                <p className="text-sm text-gray-500 text-center mt-3">
+                  请使用支付宝扫码支付
+                </p>
               </div>
 
               <div className="flex gap-3">
@@ -143,6 +174,19 @@ export default function AccountPage() {
               充值积分
             </div>
           </button>
+          <button
+            onClick={() => setActiveTab('settings')}
+            className={`px-5 py-3 text-sm font-medium transition border-b-2 ${
+              activeTab === 'settings'
+                ? 'text-amber-600 border-amber-600'
+                : 'text-gray-500 border-transparent hover:text-gray-700'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <Shield className="w-4 h-4" />
+              账户设置
+            </div>
+          </button>
         </div>
 
         {/* 我的账户 Tab */}
@@ -176,26 +220,46 @@ export default function AccountPage() {
                 <h3 className="text-sm font-medium text-gray-700">消费记录</h3>
               </div>
               <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-gray-100 bg-gray-50/50">
-                      <th className="px-5 py-3 text-left text-xs font-medium text-gray-500">类型</th>
-                      <th className="px-5 py-3 text-left text-xs font-medium text-gray-500">模型</th>
-                      <th className="px-5 py-3 text-right text-xs font-medium text-gray-500">费用</th>
-                      <th className="px-5 py-3 text-right text-xs font-medium text-gray-500">时间</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {consumptionRecords.map((record, index) => (
-                      <tr key={index} className="border-b border-gray-50 hover:bg-gray-50/50 transition">
-                        <td className="px-5 py-3 text-sm text-gray-700">{record.type}</td>
-                        <td className="px-5 py-3 text-sm text-gray-500">{record.model}</td>
-                        <td className="px-5 py-3 text-sm text-gray-700 text-right">{record.cost} 积分</td>
-                        <td className="px-5 py-3 text-sm text-gray-400 text-right">{record.time}</td>
+                {isLoading ? (
+                  <div className="py-8 text-center text-gray-400">加载中...</div>
+                ) : transactions.length === 0 ? (
+                  <div className="py-8 text-center text-gray-400">暂无消费记录</div>
+                ) : (
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-gray-100 bg-gray-50/50">
+                        <th className="px-5 py-3 text-left text-xs font-medium text-gray-500">类型</th>
+                        <th className="px-5 py-3 text-left text-xs font-medium text-gray-500">平台</th>
+                        <th className="px-5 py-3 text-right text-xs font-medium text-gray-500">积分</th>
+                        <th className="px-5 py-3 text-right text-xs font-medium text-gray-500">时间</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {transactions.map((tx) => (
+                        <tr key={tx.id} className="border-b border-gray-50 hover:bg-gray-50/50 transition">
+                          <td className="px-5 py-3 text-sm text-gray-700">
+                            {tx.type === 'recharge' ? (
+                              <span className="text-green-600">充值</span>
+                            ) : (
+                              <span className="text-gray-700">消费</span>
+                            )}
+                          </td>
+                          <td className="px-5 py-3 text-sm text-gray-500">
+                            {getOperationName(tx.description, tx.platform)}
+                          </td>
+                          <td className="px-5 py-3 text-sm text-right">
+                            <span className={tx.type === 'recharge' ? 'text-green-600' : 'text-gray-700'}>
+                              {tx.type === 'recharge' ? '+' : ''}{tx.amount}
+                            </span>
+                          </td>
+                          <td className="px-5 py-3 text-sm text-gray-400 text-right">
+                            {formatDate(tx.createdAt)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
               </div>
             </div>
           </div>
@@ -254,17 +318,6 @@ export default function AccountPage() {
                   {paymentMethod === 'alipay' && <CheckCircle className="w-4 h-4" />}
                   <span className="text-sm font-medium">支付宝</span>
                 </button>
-                <button
-                  onClick={() => setPaymentMethod('wechat')}
-                  className={`flex items-center gap-2 px-5 py-3 rounded-lg border-2 transition ${
-                    paymentMethod === 'wechat'
-                      ? 'border-green-500 bg-green-50 text-green-700'
-                      : 'border-gray-200 text-gray-600 hover:border-gray-300'
-                  }`}
-                >
-                  {paymentMethod === 'wechat' && <CheckCircle className="w-4 h-4" />}
-                  <span className="text-sm font-medium">微信支付</span>
-                </button>
               </div>
             </div>
 
@@ -279,6 +332,48 @@ export default function AccountPage() {
             <p className="text-xs text-gray-400 text-center">
               充值即表示您同意《用户协议》和《隐私政策》
             </p>
+          </div>
+        )}
+
+        {/* 账户设置 Tab */}
+        {activeTab === 'settings' && (
+          <div className="space-y-5">
+            {/* 标题 */}
+            <div>
+              <h1 className="text-xl font-bold text-gray-900">账户设置</h1>
+              <p className="text-sm text-gray-500 mt-1">个人信息 · 安全设置</p>
+            </div>
+
+            {/* 个人信息 */}
+            <div className="bg-white rounded-xl border border-gray-200 p-6">
+              <div className="flex items-center gap-2 mb-5">
+                <User className="w-4 h-4 text-gray-400" />
+                <h3 className="text-sm font-medium text-gray-700">个人信息</h3>
+              </div>
+              <div className="space-y-4 max-w-md">
+                <div>
+                  <label className="text-sm text-gray-500 block mb-1.5">邮箱</label>
+                  <input
+                    type="email"
+                    placeholder="your@email.com"
+                    className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm text-gray-500 block mb-1.5">密码</label>
+                  <input
+                    type="password"
+                    placeholder="••••••••"
+                    className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* 保存按钮 */}
+            <button className="px-6 py-3 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 transition shadow-lg shadow-purple-200">
+              保存设置
+            </button>
           </div>
         )}
       </div>

@@ -12,15 +12,12 @@ const quickActions = [
   { href: '/knowledge', icon: '📚', label: '专业知识库', color: 'bg-purple-50' },
 ]
 
-const mockRecentContents = [
-  { id: 1, title: '618种草指南｜回购N次的宝藏好物分享', platform: '小红书', time: '10分钟前' },
-  { id: 2, title: '深度测评｜2024年最值得入手的数码装备', platform: '公众号', time: '30分钟前' },
-  { id: 3, title: '朋友圈文案｜周末探店打卡指南', platform: '朋友圈', time: '1小时前' },
-  { id: 4, title: '抖音脚本｜3分钟说清楚什么是AI写作', platform: '抖音', time: '2小时前' },
-  { id: 5, title: '小红书爆款｜5个让笔记火起来的技巧', platform: '小红书', time: '3小时前' },
+// 默认空数据
+const defaultRecentContents = [
+  { id: 0, title: '还没有生成内容', platform: '', time: '' },
 ]
 
-const mockHotContents = [
+const defaultSampleContents = [
   { id: 1, title: 'ChatGPT写作技巧｜如何让AI写出爆款文案', hot: '🔥 10w+阅读', platform: '小红书' },
   { id: 2, title: '2024内容营销趋势分析报告', hot: '🔥 8.5w阅读', platform: '公众号' },
   { id: 3, title: '短视频脚本公式｜3秒抓住观众眼球', hot: '🔥 6.2w阅读', platform: '抖音' },
@@ -33,20 +30,32 @@ const platformColors: Record<string, string> = {
   '公众号': 'text-green-600 bg-green-50',
   '朋友圈': 'text-blue-600 bg-blue-50',
   '抖音': 'text-purple-600 bg-purple-50',
+  '综合': 'text-gray-600 bg-gray-50',
 }
 
 export default function DashboardPage() {
   const [stats, setStats] = useState({ credits: 0, todayContents: 0, monthContents: 0 })
-  const [activeTab, setActiveTab] = useState<'recent' | 'hot'>('recent')
+  const [recentContents, setRecentContents] = useState(defaultRecentContents)
+  const [sampleContents, setSampleContents] = useState(defaultSampleContents)
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    fetch('/api/stats')
-      .then(res => res.json())
-      .then(setStats)
-      .catch(() => {})
+    // 并行获取统计数据、最近内容、示例内容
+    Promise.all([
+      fetch('/api/stats').then(res => res.json()).catch(() => ({})),
+      fetch('/api/recent-contents').then(res => res.json()).catch(() => ({ contents: [] })),
+      fetch('/api/sample-contents').then(res => res.json()).catch(() => ({ contents: [] })),
+    ]).then(([statsData, recentData, sampleData]) => {
+      if (statsData.credits !== undefined) setStats(statsData)
+      if (recentData.contents && recentData.contents.length > 0) {
+        setRecentContents(recentData.contents)
+      }
+      if (sampleData.contents && sampleData.contents.length > 0) {
+        setSampleContents(sampleData.contents)
+      }
+      setIsLoading(false)
+    })
   }, [])
-
-  const contents: any = activeTab === 'recent' ? mockRecentContents : mockHotContents
 
   return (
     <div className="p-6 space-y-6">
@@ -96,54 +105,70 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* 最近生成 / 爆款文章 Tab */}
-      <div className="bg-white rounded-xl overflow-hidden">
-        {/* Tab 切换 */}
-        <div className="flex border-b border-gray-200">
-          <button
-            onClick={() => setActiveTab('recent')}
-            className={`px-6 py-4 text-sm font-medium border-b-2 transition ${
-              activeTab === 'recent'
-                ? 'border-purple-600 text-purple-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            最近生成
-          </button>
-          <button
-            onClick={() => setActiveTab('hot')}
-            className={`px-6 py-4 text-sm font-medium border-b-2 transition ${
-              activeTab === 'hot'
-                ? 'border-purple-600 text-purple-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            爆款文章
-          </button>
-        </div>
-
-        {/* 文章列表 */}
-        <div className="divide-y divide-gray-100">
-          {contents.map((item: any) => (
-            <div key={item.id} className="flex items-center gap-4 px-5 py-4 hover:bg-gray-50 transition cursor-pointer">
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 truncate">{item.title}</p>
-                <p className="text-xs text-gray-400 mt-1">
-                  {'time' in item ? item.time : 'hot' in item ? item.hot : ''}
-                </p>
+      {/* 最近生成 / 爆款文章 左右布局 */}
+      <div className="grid grid-cols-2 gap-6">
+        {/* 最近生成 */}
+        <div className="bg-white rounded-xl overflow-hidden">
+          <div className="px-5 py-4 border-b border-gray-200">
+            <h2 className="font-semibold">最近生成</h2>
+          </div>
+          <div className="divide-y divide-gray-100">
+            {isLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="w-6 h-6 border-2 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
               </div>
-              <span className={`text-xs px-2 py-1 rounded-full shrink-0 ${platformColors[item.platform] || 'text-gray-600 bg-gray-50'}`}>
-                {item.platform}
-              </span>
-            </div>
-          ))}
+            ) : recentContents[0]?.id === 0 ? (
+              <div className="flex flex-col items-center justify-center py-8 text-gray-400">
+                <span className="text-3xl mb-2">📝</span>
+                <p className="text-sm">还没有生成内容</p>
+                <Link href="/xiaohongshu" className="mt-2 text-sm text-purple-600 hover:text-purple-700">
+                  去生成 →
+                </Link>
+              </div>
+            ) : (
+              recentContents.map((item: any) => (
+                <div key={item.id} className="flex items-center gap-4 px-5 py-4 hover:bg-gray-50 transition cursor-pointer">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900 truncate">{item.title}</p>
+                    <p className="text-xs text-gray-400 mt-1">{item.time}</p>
+                  </div>
+                  <span className={`text-xs px-2 py-1 rounded-full shrink-0 ${platformColors[item.platform] || 'text-gray-600 bg-gray-50'}`}>
+                    {item.platform}
+                  </span>
+                </div>
+              ))
+            )}
+          </div>
+          <div className="px-5 py-3 border-t border-gray-100 text-center">
+            <Link href="/history" className="text-sm text-purple-600 hover:text-purple-700 font-medium">
+              查看更多 →
+            </Link>
+          </div>
         </div>
 
-        {/* 查看更多 */}
-        <div className="px-5 py-3 border-t border-gray-100 text-center">
-          <Link href={activeTab === 'recent' ? '/history' : '/hot-content'} className="text-sm text-purple-600 hover:text-purple-700 font-medium">
-            查看更多 →
-          </Link>
+        {/* 爆款文章 */}
+        <div className="bg-white rounded-xl overflow-hidden">
+          <div className="px-5 py-4 border-b border-gray-200">
+            <h2 className="font-semibold">爆款文章</h2>
+          </div>
+          <div className="divide-y divide-gray-100">
+            {sampleContents.map((item: any) => (
+              <div key={item.id} className="flex items-center gap-4 px-5 py-4 hover:bg-gray-50 transition cursor-pointer">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-900 truncate">{item.title}</p>
+                  <p className="text-xs text-gray-400 mt-1">{item.hot}</p>
+                </div>
+                <span className={`text-xs px-2 py-1 rounded-full shrink-0 ${platformColors[item.platform] || 'text-gray-600 bg-gray-50'}`}>
+                  {item.platform}
+                </span>
+              </div>
+            ))}
+          </div>
+          <div className="px-5 py-3 border-t border-gray-100 text-center">
+            <Link href="/hot-content" className="text-sm text-purple-600 hover:text-purple-700 font-medium">
+              查看更多 →
+            </Link>
+          </div>
         </div>
       </div>
     </div>
