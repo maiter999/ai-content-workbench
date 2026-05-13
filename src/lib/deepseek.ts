@@ -1,11 +1,26 @@
 import OpenAI from 'openai'
 
-const deepseek = new OpenAI({
-  baseURL: 'https://api.deepseek.com',
-  apiKey: process.env.DEEPSEEK_API_KEY || ''
-})
+function createDeepSeekClient() {
+  const apiKey = process.env.DEEPSEEK_API_KEY
+  if (!apiKey) {
+    throw new Error('DEEPSEEK_API_KEY is not configured')
+  }
+  return new OpenAI({
+    baseURL: 'https://api.deepseek.com',
+    apiKey: apiKey
+  })
+}
 
-export type Platform = 'xiaohongshu' | 'wechat' | 'douyin'
+// 懒加载，只在第一次调用时创建客户端
+let _deepseek: OpenAI | null = null
+function getDeepSeekClient() {
+  if (!_deepseek) {
+    _deepseek = createDeepSeekClient()
+  }
+  return _deepseek
+}
+
+export { getDeepSeekClient }
 
 export interface GenerateRequest {
   topic: string
@@ -107,7 +122,7 @@ export async function generateContent(req: GenerateRequest) {
       })
     }
 
-    const response = await deepseek.chat.completions.create({
+    const response = await getDeepSeekClient().chat.completions.create({
       model: 'deepseek-chat',
       messages,
       temperature: 0.7,
@@ -188,7 +203,7 @@ export async function generateContentStream(req: GenerateRequest) {
         })
       }
 
-      const stream = await deepseek.chat.completions.create({
+      const stream = await getDeepSeekClient().chat.completions.create({
         model: 'deepseek-chat',
         messages,
         stream: true,

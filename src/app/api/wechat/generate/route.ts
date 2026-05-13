@@ -1,12 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import OpenAI from 'openai'
+import { getDeepSeekClient } from '@/lib/deepseek'
 import { buildPrompt, WechatStyle } from '@/lib/prompts/wechat'
-
-const deepseek = new OpenAI({
-  baseURL: 'https://api.deepseek.com',
-  apiKey: process.env.DEEPSEEK_API_KEY || ''
-})
-
 // 模型档位配置
 interface ModelConfig {
   model: string
@@ -95,7 +89,7 @@ export async function POST(request: NextRequest) {
       requestParams.thinking_depth = config.thinking_depth
     }
 
-    const response = await deepseek.chat.completions.create(requestParams)
+    const response = await getDeepSeekClient().chat.completions.create(requestParams)
 
     const content = response.choices[0]?.message?.content || ''
 

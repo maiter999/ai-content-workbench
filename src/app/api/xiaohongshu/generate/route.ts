@@ -3,12 +3,7 @@ import { getCurrentUser } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { buildPrompt, type XiaohongshuStyle } from '@/lib/prompts/xiaohongshu'
 import { createTransaction } from '@/lib/transactions'
-import OpenAI from 'openai'
-
-const deepseek = new OpenAI({
-  baseURL: 'https://api.deepseek.com',
-  apiKey: process.env.DEEPSEEK_API_KEY || ''
-})
+import { getDeepSeekClient } from '@/lib/deepseek'
 
 // 模型档位配置
 interface ModelConfig {
@@ -89,7 +84,7 @@ export async function POST(request: Request) {
       requestParams.thinking_depth = config.thinking_depth
     }
     
-    const response = await deepseek.chat.completions.create(requestParams)
+    const response = await getDeepSeekClient().chat.completions.create(requestParams)
 
     const content = response.choices[0]?.message?.content || ''
 
