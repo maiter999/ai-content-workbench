@@ -58,55 +58,55 @@ export default function DashboardPage() {
   }, [])
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-4 md:space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">首页</h1>
-        <p className="text-gray-500 mt-1">快速开始内容创作</p>
+        <h1 className="text-xl md:text-2xl font-bold">首页</h1>
+        <p className="text-gray-500 mt-1 text-sm md:text-base">快速开始内容创作</p>
       </div>
 
       {/* 统计卡片 */}
-      <div className="grid grid-cols-3 gap-4">
-        <div className="bg-white rounded-xl p-5">
-          <p className="text-sm text-gray-500">今日生成</p>
-          <p className="text-3xl font-bold mt-1">{stats.todayContents}</p>
+      <div className="grid grid-cols-3 gap-3 md:gap-4">
+        <div className="bg-white rounded-xl p-3 md:p-5">
+          <p className="text-xs md:text-sm text-gray-500">今日生成</p>
+          <p className="text-2xl md:text-3xl font-bold mt-1">{stats.todayContents}</p>
         </div>
-        <div className="bg-white rounded-xl p-5">
-          <p className="text-sm text-gray-500">本月生成</p>
-          <p className="text-3xl font-bold mt-1">{stats.monthContents}</p>
+        <div className="bg-white rounded-xl p-3 md:p-5">
+          <p className="text-xs md:text-sm text-gray-500">本月生成</p>
+          <p className="text-2xl md:text-3xl font-bold mt-1">{stats.monthContents}</p>
         </div>
-        <div className="bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl p-5 text-white flex items-center justify-between">
+        <div className="bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl p-3 md:p-5 text-white flex flex-col md:flex-row md:items-center justify-between gap-2">
           <div>
-            <p className="text-white/80">剩余积分</p>
-            <p className="text-3xl font-bold mt-1">{stats.credits}</p>
+            <p className="text-white/80 text-xs md:text-sm">剩余积分</p>
+            <p className="text-2xl md:text-3xl font-bold mt-1">{stats.credits}</p>
           </div>
           <Link
             href="/account?tab=recharge"
-            className="px-4 py-2 bg-white text-purple-600 rounded-lg font-medium text-sm hover:bg-gray-50 transition shrink-0"
+            className="px-2 md:px-4 py-1.5 md:py-2 bg-white text-purple-600 rounded-lg font-medium text-xs md:text-sm hover:bg-gray-50 transition shrink-0 text-center"
           >
-            充值积分
+            充值
           </Link>
         </div>
       </div>
 
       {/* 快捷功能 */}
-      <div className="bg-white rounded-xl p-6">
-        <h2 className="font-semibold mb-4">快捷功能</h2>
-        <div className="grid grid-cols-6 gap-4">
+      <div className="bg-white rounded-xl p-4 md:p-6">
+        <h2 className="font-semibold mb-3 md:mb-4 text-sm md:text-base">快捷功能</h2>
+        <div className="grid grid-cols-3 md:grid-cols-6 gap-3 md:gap-4">
           {quickActions.map(action => (
             <Link
               key={action.href}
               href={action.href}
-              className={`flex flex-col items-center gap-2 p-4 rounded-xl ${action.color}`}
+              className={`flex flex-col items-center gap-1.5 md:gap-2 p-3 md:p-4 rounded-xl ${action.color}`}
             >
-              <span className="text-3xl">{action.icon}</span>
-              <span className="text-sm font-medium">{action.label}</span>
+              <span className="text-2xl md:text-3xl">{action.icon}</span>
+              <span className="text-xs md:text-sm font-medium text-center">{action.label}</span>
             </Link>
           ))}
         </div>
       </div>
 
       {/* 最近生成 / 爆款文章 左右布局 */}
-      <div className="grid grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
         {/* 最近生成 */}
         <div className="bg-white rounded-xl overflow-hidden">
           <div className="px-5 py-4 border-b border-gray-200">
