@@ -35,7 +35,7 @@ export default function KnowledgePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="bg-gray-50">
       <div className="max-w-5xl mx-auto px-6 py-5">
         {/* 标题 */}
         <div className="mb-5">

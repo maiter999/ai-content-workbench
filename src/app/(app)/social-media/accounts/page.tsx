@@ -139,46 +139,63 @@ export default function SocialMediaAccountsPage() {
     : null
 
   return (
-    <div className="flex h-full">
-      {/* 左侧 - 平台列表 */}
-      <div className="w-64 bg-white border-r border-gray-200 flex flex-col">
-        <div className="p-4 border-b border-gray-200">
-          <h2 className="text-lg font-bold mb-1">账号管理</h2>
-          <p className="text-xs text-gray-500">管理你的自媒体账号</p>
-          <div className="mt-3 text-xs text-gray-400">
-            已添加 {totalAccounts} 个账号
+    <div className="min-h-screen bg-gray-50">
+      {/* 顶部 - 横向平台菜单 */}
+      <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="flex items-center justify-between py-3">
+            <div>
+              <h2 className="text-lg font-bold">账号管理</h2>
+              <p className="text-xs text-gray-500">管理你的自媒体账号 · 已添加 {totalAccounts} 个账号</p>
+            </div>
+            <button
+              onClick={() => setShowPlatformModal(true)}
+              className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition flex items-center gap-2 text-sm"
+            >
+              <span>+</span>
+              <span>添加账号</span>
+            </button>
           </div>
-        </div>
-
-        <div className="flex-1 overflow-y-auto">
-          {platforms.map((platform) => {
-            const count = getPlatformAccountCount(platform.id)
-            const isActive = count > 0
-            const isSelected = selectedPlatformFilter === platform.id
-
-            return (
-              <div
-                key={platform.id}
-                onClick={() => setSelectedPlatformFilter(isSelected ? null : platform.id)}
-                className={`flex items-center justify-between px-4 py-3 cursor-pointer hover:bg-gray-50 transition ${
-                  isSelected ? 'bg-purple-50 border-l-4 border-purple-600' : ''
-                } ${isActive && !isSelected ? 'bg-blue-50' : ''}`}
-              >
-                <div className="flex items-center gap-3">
-                  <span className="text-xl">{platform.icon}</span>
-                  <span className="text-sm font-medium">{platform.name}</span>
-                </div>
-                <span className={`text-xs ${isActive ? 'text-blue-600' : 'text-gray-400'}`}>
-                  {count}/{platform.maxAccounts}
-                </span>
-              </div>
-            )
-          })}
+          <div className="flex gap-1 pb-0 -mb-px overflow-x-auto">
+            <button
+              onClick={() => setSelectedPlatformFilter(null)}
+              className={`px-4 py-2 text-sm font-medium border-b-2 transition whitespace-nowrap ${
+                selectedPlatformFilter === null
+                  ? 'border-purple-600 text-purple-700 bg-purple-50 rounded-t-lg'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-t-lg'
+              }`}
+            >
+              全部 ({totalAccounts})
+            </button>
+            {platforms.map((platform) => {
+              const count = getPlatformAccountCount(platform.id)
+              const isSelected = selectedPlatformFilter === platform.id
+              return (
+                <button
+                  key={platform.id}
+                  onClick={() => setSelectedPlatformFilter(isSelected ? null : platform.id)}
+                  className={`px-4 py-2 text-sm font-medium border-b-2 transition whitespace-nowrap flex items-center gap-1 ${
+                    isSelected
+                      ? 'border-purple-600 text-purple-700 bg-purple-50 rounded-t-lg'
+                      : count > 0
+                      ? 'border-transparent text-gray-700 hover:bg-gray-50 rounded-t-lg'
+                      : 'border-transparent text-gray-400 hover:bg-gray-50 rounded-t-lg'
+                  }`}
+                >
+                  <span>{platform.icon}</span>
+                  <span>{platform.name}</span>
+                  <span className={`text-xs ${count > 0 ? 'text-blue-600' : 'text-gray-400'}`}>
+                    {count}/{platform.maxAccounts}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
         </div>
       </div>
 
-      {/* 右侧 - 内容区域 */}
-      <div className="flex-1 p-6 overflow-auto">
+      {/* 下方 - 账号列表 */}
+      <div className="max-w-6xl mx-auto px-6 py-6">
         {/* 页面标题和添加账号按钮 */}
         <div className="flex items-center justify-between mb-6">
           <div>

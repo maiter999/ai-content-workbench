@@ -1,8 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
-import Image from 'next/image'
 import { CreditCard, Wallet, CheckCircle, User, Shield } from 'lucide-react'
 
 type TabType = 'account' | 'recharge' | 'settings'
@@ -24,7 +23,7 @@ interface Transaction {
   createdAt: string
 }
 
-export default function AccountPage() {
+function AccountContent() {
   const searchParams = useSearchParams()
   const [activeTab, setActiveTab] = useState<TabType>('account')
   const [balance, setBalance] = useState(0)  // 从API获取
@@ -105,7 +104,7 @@ export default function AccountPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="bg-gray-50">
       <div className="max-w-5xl mx-auto px-6 py-5">
         {/* 收款码弹窗 */}
         {showQR && (
@@ -114,14 +113,7 @@ export default function AccountPage() {
               <h2 className="text-xl font-bold mb-4 text-center">扫码支付</h2>
 
               <div className="bg-gray-50 rounded-xl p-4 mb-4">
-                <div className="relative w-48 h-48 mx-auto bg-white rounded">
-                  <Image
-                    src="/alipay-qr.jpg"
-                    alt="支付宝收款码"
-                    fill
-                    className="object-contain"
-                  />
-                </div>
+                <div className="bg-gray-200 border-2 border-dashed rounded-xl w-48 h-48 mx-auto" />
                 <p className="text-sm text-gray-500 text-center mt-3">
                   请使用支付宝扫码支付
                 </p>
@@ -378,5 +370,13 @@ export default function AccountPage() {
         )}
       </div>
     </div>
+  )
+}
+
+export default function AccountPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-gray-500">加载中...</div>}>
+      <AccountContent />
+    </Suspense>
   )
 }

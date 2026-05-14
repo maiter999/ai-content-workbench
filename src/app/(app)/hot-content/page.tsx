@@ -215,7 +215,7 @@ export default function HotContentPage() {
   const currentIndustry = industries.find(i => i.id === selectedIndustry)
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="bg-gray-50">
       {/* 顶部标题区 */}
       <div className="bg-white border-b border-gray-200 px-6 py-5">
         <div className="max-w-7xl mx-auto">
@@ -329,8 +329,8 @@ export default function HotContentPage() {
           </div>
         )}
 
-        {/* 内容区 */}
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden min-h-[400px]">
+        {/* PC 端：表格布局 */}
+        <div className="hidden md:block bg-white rounded-xl border border-gray-200 overflow-hidden min-h-[400px]">
           {loading ? (
             <div className="flex flex-col items-center justify-center py-20">
               <div className="w-10 h-10 border-4 border-purple-600 border-t-transparent rounded-full animate-spin mb-4" />
@@ -448,6 +448,113 @@ export default function HotContentPage() {
                 {selectedIndustry === 'all' 
                   ? '请检查网络连接或稍后重试' 
                   : '请尝试选择其他行业分类'
+                }
+              </p>
+              {selectedIndustry !== 'all' && (
+                <button
+                  onClick={() => setSelectedIndustry('all')}
+                  className="mt-3 text-sm text-purple-600 hover:text-purple-800 underline"
+                >
+                  查看全部热榜
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* 手机端：卡片布局 */}
+        <div className="md:hidden space-y-3">
+          {loading ? (
+            <div className="bg-white rounded-xl border border-gray-200 p-8 flex flex-col items-center justify-center">
+              <div className="w-10 h-10 border-4 border-purple-600 border-t-transparent rounded-full animate-spin mb-4" />
+              <p className="text-gray-500 text-sm">正在获取热榜数据...</p>
+            </div>
+          ) : filteredArticles.length > 0 ? (
+            filteredArticles.map((article, index) => {
+              const platformInfo = platformConfig[article.platform] || { name: article.platform, color: 'text-gray-600', bg: 'bg-gray-50' }
+              const rank = index + 1
+              return (
+                <div key={article.id} className="bg-white rounded-xl border border-gray-200 p-4">
+                  {/* 顶部：排名 + 来源 + 热度 */}
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className={`inline-flex items-center justify-center w-7 h-7 rounded-lg text-xs font-bold ${getRankBadge(rank)}`}>
+                      {rank}
+                    </span>
+                    <span className={`px-2 py-0.5 rounded text-xs font-medium ${platformInfo.bg} ${platformInfo.color}`}>
+                      {platformInfo.name}
+                    </span>
+                    <span className="ml-auto text-sm font-medium text-red-500">
+                      🔥 {formatHotValue(article.hotValue)}
+                    </span>
+                  </div>
+                  
+                  {/* 文章标题 */}
+                  <button
+                    onClick={() => openArticle(article.url)}
+                    className="text-sm text-gray-900 hover:text-purple-600 text-left leading-relaxed mb-2 transition-colors"
+                  >
+                    {article.title}
+                  </button>
+                  
+                  {/* 关键词标签 */}
+                  {selectedIndustry !== 'all' && article.matchedKeywords && article.matchedKeywords.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mb-3">
+                      {article.matchedKeywords.slice(0, 3).map((kw, i) => (
+                        <span key={i} className="px-1.5 py-0.5 bg-purple-100 text-purple-600 text-xs rounded">
+                          {kw}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  
+                  {/* 时间 */}
+                  <div className="text-xs text-gray-400 mb-3">
+                    {formatTime(article.publishTime)}
+                  </div>
+                  
+                  {/* 操作按钮 */}
+                  <div className="flex items-center justify-between gap-2 pt-3 border-t border-gray-100">
+                    <button
+                      onClick={() => handleCollect(article.id)}
+                      className="flex-1 flex items-center justify-center gap-1 py-2 text-gray-500 hover:text-yellow-500 hover:bg-yellow-50 rounded-lg transition text-xs"
+                    >
+                      <Star className="w-4 h-4" />
+                      <span>收藏</span>
+                    </button>
+                    <button
+                      onClick={() => handleCopy(article)}
+                      className="flex-1 flex items-center justify-center gap-1 py-2 text-gray-500 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition text-xs"
+                    >
+                      <Copy className="w-4 h-4" />
+                      <span>复制</span>
+                    </button>
+                    <button
+                      onClick={() => handleRewrite(article)}
+                      className="flex-1 flex items-center justify-center gap-1 py-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition text-xs"
+                    >
+                      <FileText className="w-4 h-4" />
+                      <span>改写</span>
+                    </button>
+                    <button
+                      onClick={() => handleGenerate(article)}
+                      className="flex-1 flex items-center justify-center gap-1 py-2 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded-lg transition text-xs"
+                    >
+                      <Zap className="w-4 h-4" />
+                      <span>生成</span>
+                    </button>
+                  </div>
+                </div>
+              )
+            })
+          ) : (
+            <div className="bg-white rounded-xl border border-gray-200 p-8 flex flex-col items-center justify-center">
+              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                <span className="text-3xl">{currentIndustry?.icon || '📊'}</span>
+              </div>
+              <p className="text-gray-500 text-sm mb-1">
+                {selectedIndustry === 'all' 
+                  ? '暂无热榜数据' 
+                  : `暂无「${currentIndustry?.name}」行业的相关热榜内容`
                 }
               </p>
               {selectedIndustry !== 'all' && (

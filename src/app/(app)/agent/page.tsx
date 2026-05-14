@@ -83,7 +83,7 @@ export default function AgentPage() {
   const totalSpend = mockUsers.reduce((sum, u) => sum + u.totalSpend, 0)
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="bg-gray-50">
       <div className="max-w-7xl mx-auto px-6 py-5">
         {/* 标题 */}
         <div className="mb-5">

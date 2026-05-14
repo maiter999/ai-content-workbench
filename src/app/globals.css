@@ -1,15 +1,15 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-  --primary: #7c3aed;
-  --primary-hover: #6d28d9;
+/* Tailwind CSS v4 主题配置 */
+@theme {
+  --color-primary: #7c3aed;
+  --color-primary-hover: #6d28d9;
 }
 
+/* 基础样式 */
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: #ffffff;
+  color: #171717;
   font-family: system-ui, -apple-system, sans-serif;
 }
 
@@ -31,7 +31,7 @@ body {
 .loading-spinner {
   width: 3rem;
   height: 3rem;
-  border: 4px solid var(--primary);
+  border: 4px solid #7c3aed;
   border-top-color: transparent;
   border-radius: 50%;
   animation: spin 1s linear infinite;
@@ -45,24 +45,13 @@ body {
 .loading-dots div {
   width: 0.75rem;
   height: 0.75rem;
-  background: var(--primary);
+  background: #7c3aed;
   border-radius: 50%;
   animation: bounce 0.5s ease-in-out infinite;
 }
 
 .loading-dots div:nth-child(2) { animation-delay: 0.1s; }
 .loading-dots div:nth-child(3) { animation-delay: 0.2s; }
-
-/* 响应式 */
-@media (max-width: 640px) {
-  .container { padding-left: 1rem; padding-right: 1rem; }
-  h1 { font-size: 1.5rem; }
-  .card { padding: 1rem; }
-}
-
-@media (max-width: 768px) {
-  .sidebar { display: none; }
-}
 
 /* 动画 */
 .fade-in {

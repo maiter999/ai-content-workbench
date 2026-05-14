@@ -11,11 +11,11 @@ export default function HistoryPage() {
   ])
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="bg-gray-50">
       <div className="max-w-5xl mx-auto px-6 py-5">
         {/* 标题 */}
         <div className="mb-5">
-          <h1 className="text-xl font-bold text-gray-900">📜 生成文章</h1>
+          <h1 className="text-xl font-bold text-gray-900">📜 历史记录</h1>
           <p className="text-sm text-gray-500 mt-1">查看历史生成记录</p>
         </div>
 

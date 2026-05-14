@@ -109,7 +109,7 @@ export default function RewritePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="bg-gray-50">
       <div className="max-w-5xl mx-auto px-6 py-5">
         {/* 标题 */}
         <div className="mb-5">
@@ -117,7 +117,7 @@ export default function RewritePage() {
           <p className="text-sm text-gray-500 mt-1">爆款文章改写 + 爆款标题生成</p>
         </div>
 
-        <div className="grid grid-cols-2 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           {/* 左侧 - 爆款文章改写 */}
           <div className="space-y-4">
             <div className="flex items-center gap-2 mb-2">

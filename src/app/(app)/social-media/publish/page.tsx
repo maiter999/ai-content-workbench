@@ -86,11 +86,12 @@ export default function PublishPage() {
   }
 
   return (
-    <div className="h-full flex flex-col">
-      {/* 上半部分：发布区域 - 左右等宽 */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* 左侧：长文编辑器 */}
-        <div className="w-1/2 border-r border-gray-200 flex flex-col">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      {/* 上方内容区域 */}
+      <div className="flex-1 overflow-auto">
+        <div className="max-w-6xl mx-auto px-6 py-6 space-y-6">
+          {/* 长文发布 */}
+          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
           {/* 标题 */}
           <div className="px-4 py-3 border-b border-gray-200">
             <h2 className="text-lg font-semibold text-gray-800">长文发布</h2>
@@ -171,8 +172,8 @@ export default function PublishPage() {
           </div>
         </div>
 
-        {/* 右侧：短文编辑器 */}
-        <div className="w-1/2 border-l border-gray-200 flex flex-col">
+        {/* 短文发布 */}
+        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
           {/* 标题 */}
           <div className="px-4 py-3 border-b border-gray-200">
             <h2 className="text-lg font-semibold text-gray-800">短文发布</h2>
@@ -248,98 +249,89 @@ export default function PublishPage() {
         </div>
       </div>
 
-      {/* 下半部分：支持平台 + 发布账号 */}
-      <div className="border-t border-gray-200 px-6 py-4 bg-white">
-        <div className="flex items-center gap-8">
-          {/* 支持平台 */}
+      {/* 下半部分：支持平台 + 发布账号 - 垂直排列 */}
+      <div className="border-t border-gray-200 bg-white">
+        <div className="max-w-6xl mx-auto px-6 py-4 space-y-4">
+          {/* 第一行：支持平台 */}
           <div className="flex items-center gap-4">
-            <span className="text-sm font-medium text-gray-700">支持平台</span>
-            <div className="flex items-center gap-2">
-              {platforms.map((platform) => (
-                <div
-                  key={platform.id}
-                  className="w-8 h-8 rounded-lg flex items-center justify-center text-white text-sm"
-                  style={{ backgroundColor: platform.color }}
-                  title={platform.name}
-                >
-                  {platform.icon}
+            {/* 支持平台 */}
+            <div className="flex items-center gap-4">
+              <span className="text-sm font-medium text-gray-700">支持平台</span>
+              <div className="flex items-center gap-2">
+                {platforms.map((platform) => (
+                  <div
+                    key={platform.id}
+                    className="w-8 h-8 rounded-lg flex items-center justify-center text-white text-sm"
+                    style={{ backgroundColor: platform.color }}
+                    title={platform.name}
+                  >
+                    {platform.icon}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="w-px h-8 bg-gray-200"></div>
+
+            {/* 发布账号 */}
+            <div className="flex items-center gap-6">
+              <span className="text-sm font-medium text-gray-700">发布账号</span>
+
+              {selectedAccounts.length === 0 ? (
+                <div className="flex items-center gap-4">
+                  <button
+                    onClick={() => setShowAccountModal(true)}
+                    className="px-4 py-2 bg-green-500 text-white text-sm rounded-lg hover:bg-green-600 transition"
+                  >
+                    + 选择发布账号
+                  </button>
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2">
+                      <span className="w-5 h-5 bg-green-500 text-white rounded-full flex items-center justify-center text-xs font-medium">1</span>
+                      <span className="text-xs text-gray-500">选择发布账号</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="w-5 h-5 bg-green-500 text-white rounded-full flex items-center justify-center text-xs font-medium">2</span>
+                      <span className="text-xs text-gray-500">调整发文规则</span>
+                    </div>
+                  </div>
                 </div>
-              ))}
+              ) : (
+                <div className="flex items-center gap-4">
+                  <div className="flex -space-x-2">
+                    {selectedAccounts.slice(0, 5).map((accountId) => {
+                      const account = mockAccounts.find(a => a.id === accountId)
+                      if (!account) return null
+                      return (
+                        <img
+                          key={accountId}
+                          src={account.avatar}
+                          alt={account.name}
+                          className="w-8 h-8 rounded-full border-2 border-white"
+                          title={account.name}
+                        />
+                      )
+                    })}
+                    {selectedAccounts.length > 5 && (
+                      <div className="w-8 h-8 rounded-full bg-gray-200 border-2 border-white flex items-center justify-center text-xs font-medium">
+                        +{selectedAccounts.length - 5}
+                      </div>
+                    )}
+                  </div>
+                  <span className="text-sm text-gray-500">{selectedAccounts.length} 个账号</span>
+                  <button
+                    onClick={() => setShowAccountModal(true)}
+                    className="px-3 py-1 text-xs border border-gray-300 rounded hover:bg-gray-50"
+                  >
+                    修改
+                  </button>
+                </div>
+              )}
             </div>
           </div>
 
-          <div className="w-px h-8 bg-gray-200"></div>
-
-          {/* 发布账号 */}
-          <div className="flex items-center gap-6">
-            <span className="text-sm font-medium text-gray-700">发布账号</span>
-
-            {selectedAccounts.length === 0 ? (
-              <div className="flex items-center gap-4">
-                <button
-                  onClick={() => setShowAccountModal(true)}
-                  className="px-4 py-2 bg-green-500 text-white text-sm rounded-lg hover:bg-green-600 transition"
-                >
-                  + 选择发布账号
-                </button>
-                {/* 步骤说明 */}
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-2">
-                    <span className="w-5 h-5 bg-green-500 text-white rounded-full flex items-center justify-center text-xs font-medium">1</span>
-                    <span className="text-xs text-gray-500">选择发布账号</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="w-5 h-5 bg-green-500 text-white rounded-full flex items-center justify-center text-xs font-medium">2</span>
-                    <span className="text-xs text-gray-500">调整发文规则</span>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="flex items-center gap-2">
-                <div className="flex -space-x-2">
-                  {selectedAccounts.slice(0, 5).map((accountId) => {
-                    const account = mockAccounts.find(a => a.id === accountId)
-                    if (!account) return null
-                    return (
-                      <img
-                        key={accountId}
-                        src={account.avatar}
-                        alt={account.name}
-                        className="w-8 h-8 rounded-full border-2 border-white"
-                        title={account.name}
-                      />
-                    )
-                  })}
-                  {selectedAccounts.length > 5 && (
-                    <div className="w-8 h-8 rounded-full bg-gray-200 border-2 border-white flex items-center justify-center text-xs font-medium">
-                      +{selectedAccounts.length - 5}
-                    </div>
-                  )}
-                </div>
-                <span className="text-sm text-gray-500">{selectedAccounts.length} 个账号</span>
-                <button
-                  onClick={() => setShowAccountModal(true)}
-                  className="px-3 py-1 text-xs border border-gray-300 rounded hover:bg-gray-50"
-                >
-                  修改
-                </button>
-                {/* 步骤说明 */}
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-2">
-                    <span className="w-5 h-5 bg-green-500 text-white rounded-full flex items-center justify-center text-xs font-medium">1</span>
-                    <span className="text-xs text-gray-500">选择发布账号</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="w-5 h-5 bg-green-500 text-white rounded-full flex items-center justify-center text-xs font-medium">2</span>
-                    <span className="text-xs text-gray-500">调整发文规则</span>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* 操作按钮 */}
-          <div className="ml-auto flex items-center gap-3">
+          {/* 第二行：操作按钮 */}
+          <div className="flex items-center gap-3">
             <button className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 transition">
               <span>👁️</span>
               <span>预览</span>
@@ -427,6 +419,7 @@ export default function PublishPage() {
           </div>
         </div>
       )}
+        </div>
     </div>
   )
 }

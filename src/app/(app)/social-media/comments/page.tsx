@@ -123,58 +123,57 @@ export default function CommentsPage() {
   }
 
   return (
-    <div className="flex h-full bg-white">
-      {/* 左侧 - 账号列表 */}
-      <div className="w-72 border-r border-gray-200 flex flex-col">
-        {/* 搜索 */}
-        <div className="p-4 border-b border-gray-200">
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="搜索账号"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-            />
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
-          </div>
-        </div>
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      {/* 顶部 - 横向账号菜单 */}
+      <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
+        <div className="max-w-6xl mx-auto px-6 py-3">
+          <div className="flex items-center gap-4">
+            {/* 搜索框 */}
+            <div className="relative w-56 shrink-0">
+              <input
+                type="text"
+                placeholder="搜索账号"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-9 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+              />
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">🔍</span>
+            </div>
 
-        {/* 账号列表 */}
-        <div className="flex-1 overflow-y-auto">
-          {filteredAccounts.map((account) => {
-            const platform = getPlatformInfo(account.platform)
-            const isSelected = selectedAccount === account.id
-            return (
-              <div
-                key={account.id}
-                onClick={() => setSelectedAccount(account.id)}
-                className={`flex items-center gap-3 px-4 py-3 cursor-pointer transition ${
-                  isSelected
-                    ? 'bg-purple-50 border-l-4 border-purple-600'
-                    : 'hover:bg-gray-50 border-l-4 border-transparent'
-                }`}
-              >
-                <img
-                  src={account.avatar}
-                  alt={account.name}
-                  className="w-10 h-10 rounded-full bg-gray-100"
-                />
-                <div className="flex-1 min-w-0">
-                  <div className="font-medium text-sm truncate">{account.name}</div>
-                  <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs ${platform.bg} ${platform.text}`}>
-                    <span>{platform.icon}</span>
-                    <span>{platform.name}</span>
-                  </span>
-                </div>
-              </div>
-            )
-          })}
+            {/* 横向账号列表 */}
+            <div className="flex-1 flex items-center gap-2 overflow-x-auto">
+              {filteredAccounts.map((account) => {
+                const platform = getPlatformInfo(account.platform)
+                const isSelected = selectedAccount === account.id
+                return (
+                  <button
+                    key={account.id}
+                    onClick={() => setSelectedAccount(account.id)}
+                    className={`flex items-center gap-2 px-3 py-2 rounded-lg whitespace-nowrap transition shrink-0 ${
+                      isSelected
+                        ? 'bg-purple-100 text-purple-700 border-b-2 border-purple-600'
+                        : 'hover:bg-gray-100 text-gray-700'
+                    }`}
+                  >
+                    <img
+                      src={account.avatar}
+                      alt={account.name}
+                      className="w-6 h-6 rounded-full bg-gray-100"
+                    />
+                    <span className="text-sm font-medium">{account.name}</span>
+                    <span className={`inline-flex items-center gap-0.5 text-xs ${platform.bg} ${platform.text} px-1.5 py-0.5 rounded`}>
+                      {platform.icon}
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* 右侧 - 内容区域 */}
-      <div className="flex-1 flex flex-col">
+      {/* 下方 - 内容区域 */}
+      <div className="flex-1 p-6">
         {currentAccount ? (
           <>
             {/* 顶部标签栏 */}

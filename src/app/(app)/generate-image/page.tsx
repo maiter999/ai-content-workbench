@@ -144,7 +144,7 @@ export default function GenerateImagePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="bg-gray-50">
       <div className="max-w-7xl mx-auto px-6 py-5">
         {/* 标题 */}
         <div className="mb-5">
@@ -152,7 +152,7 @@ export default function GenerateImagePage() {
           <p className="text-sm text-gray-500 mt-1">基于AI生图大模型，支持多种风格和尺寸</p>
         </div>
 
-        <div className="grid grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* 左侧配置 */}
           <div className="space-y-4">
             {/* 提示词 */}

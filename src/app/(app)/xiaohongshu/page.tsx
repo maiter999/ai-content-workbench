@@ -122,7 +122,7 @@ export default function XiaohongshuPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="bg-gray-50">
       <div className="max-w-5xl mx-auto px-6 py-5">
         {/* 标题 */}
         <div className="mb-5">
@@ -130,7 +130,7 @@ export default function XiaohongshuPage() {
           <p className="text-sm text-gray-500 mt-1">一键生成爆款笔记——标题、正文、标签</p>
         </div>
 
-        <div className="grid grid-cols-2 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           {/* 左侧表单 */}
           <div className="space-y-3">
             {/* 错误提示 */}
